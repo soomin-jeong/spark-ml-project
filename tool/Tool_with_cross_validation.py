@@ -82,6 +82,9 @@ cv = CrossValidator(estimator=pipeline, estimatorParamMaps=params, evaluator=rms
 cv_model = cv.fit(flights_train)
 print("Time taken to develop model: " + str(time.time()-start) + 's.')
 
+modelPath = "/lr_model"
+cv_model.save(modelPath)
+
 # Evaluation of the best model according to evaluator
 print("RMSE training: " + str(rmse.evaluate(cv_model.bestModel.transform(flights_train))))
 print('RMSE test: ' + str(rmse.evaluate(cv_model.bestModel.transform(flights_test))))
