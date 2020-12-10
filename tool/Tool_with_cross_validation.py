@@ -22,11 +22,7 @@ modelPath = reg_type
 
 # Handle input data
 try:
-    if type(file_path) == str:
-        airports = spark.read.csv(file_path, header=True)
-    else:
-        for file in file_path:
-            airports = spark.read.csv(file, header=True)
+    airports = spark.read.csv(file_path, header=True)
 except:
     print('Error occurred')
     sys.exit(1)
@@ -65,25 +61,22 @@ assembler = VectorAssembler(inputCols=[
 ], outputCol='features')
 
 # MACHINE LEARNING
-# Set up the regressor for choice of user
+# Set up the regressor for choice of user and define the parameters for hyperparameter tuning
 if reg_type == "random_forest":
     reg = RandomForestRegressor(featuresCol='features', labelCol='ArrDelay')
 
-    # Hyperparameter tuning (using gridsearch)
     params = ParamGridBuilder().addGrid(reg.numTrees, [3]) \
         .addGrid(reg.maxDepth, [5]) \
         .build()
 elif reg_type == "dec_tree":
     reg = DecisionTreeRegressor(featuresCol='features', labelCol='ArrDelay', impurity='variance')
 
-    # Hyperparameter tuning (using gridsearch)
     params = ParamGridBuilder().addGrid(reg.maxDepth, [3]) \
         .addGrid(reg.maxBins, [15]) \
         .build()
 else:
     reg = LinearRegression(featuresCol='features', labelCol='ArrDelay')
 
-    # Hyperparameter tuning (using gridsearch)
     params = ParamGridBuilder().addGrid(reg.regParam, [0.01]) \
         .addGrid(reg.elasticNetParam, [0.5]) \
         .build()
@@ -108,4 +101,5 @@ cv_model.write().overwrite().save(modelPath)
 print("RMSE training: " + str(rmse.evaluate(cv_model.bestModel.transform(flights_train))))
 print('RMSE test: ' + str(rmse.evaluate(cv_model.bestModel.transform(flights_test))))
 
+# Stop Spark
 spark.stop()
