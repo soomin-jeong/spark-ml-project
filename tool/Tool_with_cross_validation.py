@@ -2,8 +2,8 @@
 import time
 import sys
 from pyspark.sql import SparkSession
-from pyspark.ml.tuning import ParamGridBuilder, TrainValidationSplit
-from pyspark.ml.regression import LinearRegression, DecisionTreeRegressor
+from pyspark.ml.tuning import ParamGridBuilder
+from pyspark.ml.regression import LinearRegression, DecisionTreeRegressor, RandomForestRegressor
 from pyspark.ml.evaluation import RegressionEvaluator
 from pyspark.ml.feature import VectorAssembler, OneHotEncoder, StringIndexer
 from pyspark.ml import Pipeline
@@ -15,8 +15,10 @@ from pyspark.sql.types import IntegerType
 spark = SparkSession.builder.appName('Delay Classifier').master('local[*]').getOrCreate()
 print("Spark version", spark.version)
 
-# Path to the file
+# Input variables provided by the user
 file_path = "1990.csv.bz2"
+reg_type = "dec_tree"
+modelPath = reg_type
 
 # Handle input data
 try:
@@ -54,7 +56,7 @@ encoder = OneHotEncoder(inputCols=['DayOfWeek', 'Month', 'carrierIndex'],
 airports = airports.where(airports.ArrDelay.isNotNull())
 
 # Split data
-flights_train, flights_test = airports.randomSplit([0.9, 0.1], seed=123)
+flights_train, flights_test = airports.randomSplit([0.05, 0.8], seed=123)#[0.9, 0.1], seed=123)
 flights_train.show()
 
 # FEATURE SELECTION
@@ -63,32 +65,47 @@ assembler = VectorAssembler(inputCols=[
 ], outputCol='features')
 
 # MACHINE LEARNING
-# Regressor Choice
-lr = LinearRegression(featuresCol= 'features', labelCol='ArrDelay')
+# Set up the regressor for choice of user
+if reg_type == "random_forest":
+    reg = RandomForestRegressor(featuresCol='features', labelCol='ArrDelay')
+
+    # Hyperparameter tuning (using gridsearch)
+    params = ParamGridBuilder().addGrid(reg.numTrees, [3]) \
+        .addGrid(reg.maxDepth, [5]) \
+        .build()
+elif reg_type == "dec_tree":
+    reg = DecisionTreeRegressor(featuresCol='features', labelCol='ArrDelay', impurity='variance')
+
+    # Hyperparameter tuning (using gridsearch)
+    params = ParamGridBuilder().addGrid(reg.maxDepth, [3]) \
+        .addGrid(reg.maxBins, [15]) \
+        .build()
+else:
+    reg = LinearRegression(featuresCol='features', labelCol='ArrDelay')
+
+    # Hyperparameter tuning (using gridsearch)
+    params = ParamGridBuilder().addGrid(reg.regParam, [0.01]) \
+        .addGrid(reg.elasticNetParam, [0.5]) \
+        .build()
+
+# Construct a pipeline of preprocessing, feature engineering and regressor
+pipeline = Pipeline(stages=[indexer, encoder, assembler, reg])
+
+# Error measure
 rmse = RegressionEvaluator(labelCol='ArrDelay')
 
-# Hyperparameter tuning (using gridsearch)
-params = ParamGridBuilder().addGrid(lr.regParam, [0.01]) \
-                        .addGrid(lr.elasticNetParam, [0.5])\
-                        .build()
-
-# Construct a pipeline
-pipeline = Pipeline(stages=[indexer, encoder, assembler, lr])
-
-# Modelling
+# Start the actual modelling
 print("Start Model Fitting")
 start = time.time()
-cv = CrossValidator(estimator=pipeline, estimatorParamMaps=params, evaluator=rmse, numFolds=5)
+cv = CrossValidator(estimator=pipeline, estimatorParamMaps=params, evaluator=rmse, numFolds=2)
 cv_model = cv.fit(flights_train)
 print("Time taken to develop model: " + str(time.time()-start) + 's.')
 
-modelPath = "/lr_model"
-cv_model.save(modelPath)
+# Save the model
+cv_model.write().overwrite().save(modelPath)
 
 # Evaluation of the best model according to evaluator
 print("RMSE training: " + str(rmse.evaluate(cv_model.bestModel.transform(flights_train))))
 print('RMSE test: ' + str(rmse.evaluate(cv_model.bestModel.transform(flights_test))))
 
-
-# if __name__ == "__main__":
-#     print('Hello')
+spark.stop()
