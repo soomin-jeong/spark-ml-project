@@ -1,5 +1,6 @@
 # spark-ml-project
 
+
 [Approach]
 - Load the input data, previously stored at a known location.
 - Select, process and transform the input variables, to prepare them for training the model.
