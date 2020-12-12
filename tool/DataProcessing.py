@@ -1,11 +1,18 @@
 import time
 import sys
+
+from matplotlib.backends.backend_pdf import PdfPages
+
+from pyspark.ml.clustering import KMeans
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import monotonically_increasing_id
 import pyspark.sql.functions as f
 
-from pyspark.sql import Row as row
+from pyspark.sql import Row as row, SparkSession
 from pyspark.sql import DataFrameStatFunctions as statFunc
+
+from pyspark.ml.linalg import Vector
+from pyspark.ml.feature import VectorAssembler
 
 # Outliers:
 # from py.path import local
@@ -43,6 +50,9 @@ print("Data loaded")
 airports2 = airports.select("*").withColumn("id", monotonically_increasing_id())
 airports2.show(n=10)
 
+# Check if the year changes if not changes would be dropped:
+
+
 # Transform string to integer to perform the analysis:
 airports2 = airports2.withColumn('CRSDepTime', airports2['CRSDepTime'].cast(IntegerType())) \
                     .withColumn('ArrDelay', airports2['ArrDelay'].cast(IntegerType())) \
@@ -71,7 +81,7 @@ print(" Delete all cases with identical data: (all the line duplicated)")
 }
 
 # MANAGE MISSING VALUES:
-print("----------------- MANAGE MISSING VALUES ----------------")
+'''print("----------------- MANAGE MISSING VALUES ----------------")
 print("Calculate the number of missing observations in a row: ")
 
 # Calculate the number of missing observtions in a row:
@@ -80,7 +90,7 @@ print("Calculate the number of missing observations in a row: ")
         airports3.rdd.map(
             lambda row: (
                 row['id'],
-                sum([c == "NA" for c in row])
+                ([c == "NA" for c in row])
             )
         )
         .collect(),
@@ -94,16 +104,16 @@ print("Calculate the number of missing observations in a row: ")
 # DISCUSS WITH SOO AND TOM.
 
 
-
+'''
 
 # HANDLING OUTLIERS:
 
 
-print("------------------------ HANDLING OUTLIERS ---------------------------------")
+#print("------------------------ HANDLING OUTLIERS ---------------------------------")
 
 # Choose the features:
 
-# Year can not be supported yet at not be in string form (integrate with Tom's script)
+'''
 features = ['CRSDepTime', 'ArrDelay', 'DepDelay', 'Distance', 'DayOfWeek', 'Month']
 
 quantiles = [0.25, 0.75]
@@ -136,13 +146,64 @@ aberrant_value = airports3.select(*['id'] + [
 print("Outliers Found: " + aberrant_value.show())
 
 # NEXT STEPS Exploratory Analysis:
-# - Perform descriptive statistics.
-# - Perform correlation tests.
 # - Perform PCA Analysis.
+# - t-test.
 
 # NEXT STEPS Machine Learning Models:
 # - Linear regression algorithm.
 # - Classification.
 # - Logistic regression.
 # - Random forest.
-# - K-means clustering. 
+# - K-means clustering.
+'''
+# K-MEANS ALGORITHM:
+
+print("K-MEANS")
+
+input_cols = ['CRSDepTime', 'ArrDelay', 'DepDelay', 'Distance', 'DayOfWeek', 'Month']
+vec_assembler = VectorAssembler(inputCols=input_cols, outputCol="PredictedArrDelay", handleInvalid="skip")
+final_data = vec_assembler.transform(airports3)
+
+print("First part done")
+errors = []
+
+for k in range(2,10):
+    kmeans = KMeans(featuresCol='PredictedArrDelay', k=k)
+    model = kmeans.fit(final_data)
+    intra_distance = model.computeCost(final_data)
+    errors.append(intra_distance)
+
+# plot intracluster distance:
+import pandas as np
+import numpy as np
+import matplotlib.pyplot as plt
+
+with PdfPages('elbow_kmens.pdf') as pdf:
+    cluster_number = range(2,10)
+    plt.xlabel('Number of Clusters (K)')
+    plt.ylabel('SSE')
+    plt.scatter(cluster_number, errors)
+    pdf.savefig()
+    plt.close()
+
+# Make predictions:
+kmeans = KMeans(featuresCol='PredictedArrDelay',k=3)
+model = kmeans.fit(final_data)
+model.transform(final_data).groupBy('PredictedArrDelay').count().show()
+
+predictions = model.transform(final_data)
+
+pandas_df = predictions.toPandas()
+pandas_df.head()
+
+from mpl_toolkits.mplot3d import Axes3D
+
+# Visualization:
+with PdfPages('kmeans_pdataFrame.pdf') as pdf:
+    cluster_vis = plt.figure(figsize=(12,10)).gca(projection='3d')
+    cluster_vis.scatter(pandas_df.CRSDepTime, pandas_df.DepDelay, c=pandas_df.ArrDelay, depthshade=False)
+    pdf.savefig()
+    plt.close()
+
+
+
