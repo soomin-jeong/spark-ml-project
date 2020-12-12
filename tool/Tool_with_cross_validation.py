@@ -30,6 +30,15 @@ except:
 # Delete the forbidden columns
 airports = airports.drop("ArrTime", "ActualElapsedTime", "AirTime", "TaxiIn", "Diverted", "CarrierDelay",
                          "WeatherDelay", "NASDelay", "SecurityDelay", "LateAircraftDelay")
+
+# FILTER ON CANCELLED
+airports = airports.where(airports.Cancelled.isNotNull())
+
+# Drop irrelevant features
+airports = airports.drop("CancellationCode")
+
+# Filter all the rows where ArrDelay is unknown
+airports = airports.where(airports.ArrDelay.isNotNull())
 print("Data loaded")
 
 # FEATURE ENGINGEERING
@@ -48,19 +57,16 @@ indexer = StringIndexer(inputCols=['UniqueCarrier'], outputCols=['carrierIndex']
 encoder = OneHotEncoder(inputCols=['DayOfWeek', 'Month', 'carrierIndex'],
                         outputCols=['DayOfWeekVec', 'MonthVec', 'carrierVec'])
 
-# Filter all the rows where ArrDelay is unknown
-airports = airports.where(airports.ArrDelay.isNotNull())
-
-# Split data
-flights_train, flights_test = airports.randomSplit([0.05, 0.8], seed=123)#[0.9, 0.1], seed=123)
-flights_train.show()
-
 # FEATURE SELECTION
 assembler = VectorAssembler(inputCols=[
     'DepDelay', 'DayOfWeekVec', 'MonthVec', 'carrierVec'
 ], outputCol='features')
 
 # MACHINE LEARNING
+# Split data
+flights_train, flights_test = airports.randomSplit([0.05, 0.8], seed=123)#[0.9, 0.1], seed=123)
+flights_train.show()
+
 # Set up the regressor for choice of user and define the parameters for hyperparameter tuning
 if reg_type == "random_forest":
     reg = RandomForestRegressor(featuresCol='features', labelCol='ArrDelay')
@@ -81,7 +87,7 @@ else:
         .addGrid(reg.elasticNetParam, [0.5]) \
         .build()
 
-# Construct a pipeline of preprocessing, feature engineering and regressor
+# Construct a pipeline of preprocessing, feature engineering, selection and regressor
 pipeline = Pipeline(stages=[indexer, encoder, assembler, reg])
 
 # Error measure
