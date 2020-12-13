@@ -1,7 +1,7 @@
 
-from tool.load_data import data_loader as dl
-from tool.process_data import data_processor as dp
-
+from load_data import data_loader as dl
+from process_data import data_processor as dp
+from predict_data import data_predictor as dpre
 
 class ArrivalDelayMachineLearningRunner(object):
     def load_data(self):
@@ -18,8 +18,8 @@ class ArrivalDelayMachineLearningRunner(object):
         input_dataset = dp.convert_datatypes(input_dataset)
         return input_dataset
 
-    def predict(self, process_data):
-        pass
+    def predict(self, processed_data):
+        dpre.predict_dummy_function(processed_data)
 
     def run(self):
         input_dataset = self.load_data()
