@@ -9,9 +9,13 @@ class ArrivalDelayMachineLearningRunner(object):
         return dl.load_dataset()
 
     def process_data(self, input_dataset):
+        input_dataset = dp.drop_duplicated_data(input_dataset)
+        input_dataset = dp.convert_datatypes(input_dataset)
+        input_dataset = dp.drop_forbidden_variables(input_dataset)
         input_dataset = dp.remove_null_arr_delay(input_dataset)
         input_dataset = dp.remove_cancelled_flights(input_dataset)
         input_dataset = dp.remove_cancelleation_code(input_dataset)
+        input_dataset = dp.convert_datatypes(input_dataset)
         return input_dataset
 
     def predict(self, process_data):
