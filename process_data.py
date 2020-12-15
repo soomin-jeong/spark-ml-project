@@ -59,5 +59,14 @@ class DataProcessor(object):
         dataset['CSRDepTS'] = temp_ts['CSRDepTS']
         return dataset
 
+    def run_all_data_processing(self, dataset):
+        dataset = self.drop_duplicated_data(dataset)
+        dataset = self.convert_datatypes(dataset)
+        dataset = self.drop_forbidden_variables(dataset)
+        dataset = self.remove_null_arr_delay(dataset)
+        dataset = self.remove_cancelled_flights(dataset)
+        dataset = self.remove_cancelleation_code(dataset)
+        dataset = self.convert_datatypes(dataset)
+        return dataset
 
 data_processor = DataProcessor()
