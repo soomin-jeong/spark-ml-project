@@ -9,6 +9,7 @@ from pyspark.ml.feature import VectorAssembler, OneHotEncoder, StringIndexer
 from pyspark.ml import Pipeline
 from pyspark.ml.tuning import CrossValidator
 from pyspark.sql.types import IntegerType
+from pyspark.sql.functions import col, floor
 
 # SET UP OF ENVIRONMENT
 # Create a Spark Session and check its version
@@ -16,9 +17,9 @@ spark = SparkSession.builder.appName('Delay Classifier').master('local[*]').getO
 print("Spark version", spark.version)
 
 # Input variables provided by the user
-file_path = "1990.csv.bz2"
-reg_type = "dec_tree"
-modelPath = reg_type
+file_path = "2007.csv.bz2"
+reg_type = "linear_reg"
+modelPath = reg_type + "3"
 
 # Handle input data
 try:
@@ -35,7 +36,7 @@ airports = airports.drop("ArrTime", "ActualElapsedTime", "AirTime", "TaxiIn", "D
 airports = airports.where(airports.Cancelled.isNotNull())
 
 # Drop irrelevant features
-airports = airports.drop("CancellationCode")
+airports = airports.drop("CancellationCode", "Cancelled")
 
 # Filter all the rows where ArrDelay is unknown
 airports = airports.where(airports.ArrDelay.isNotNull())
@@ -48,31 +49,36 @@ airports = airports.withColumn('CRSDepTime', airports['CRSDepTime'].cast(Integer
                     .withColumn('Distance', airports['Distance'].cast(IntegerType())) \
                     .withColumn('DayOfWeek', airports['DayOfWeek'].cast(IntegerType())) \
                     .withColumn('Month', airports['Month'].cast(IntegerType())) \
-                    #.withColumn('DepTime', airports['DepTime'].cast(IntegerType())) \
+                    .withColumn('TaxiOut', airports['TaxiOut'].cast(IntegerType())) \
+                    .withColumn('DepTime', airports['DepTime'].cast(IntegerType())) \
+                    .withColumn('CRSArrTime', airports['CRSArrTime'].cast(IntegerType()))
+
+airports = airports.where(airports.ArrDelay.isNotNull())
+airports = airports.withColumn('ProcDepTime', floor(col('DepTime')/100)) \
+                    .withColumn('ProcArrTime', floor(col('CRSArrTime')/100))
 
 # Transform strings to categories
 indexer = StringIndexer(inputCols=['UniqueCarrier'], outputCols=['carrierIndex'])
 
 # One hot encoding of categories
-encoder = OneHotEncoder(inputCols=['DayOfWeek', 'Month', 'carrierIndex'],
-                        outputCols=['DayOfWeekVec', 'MonthVec', 'carrierVec'])
+encoder = OneHotEncoder(inputCols=['ProcDepTime', 'ProcArrTime', 'carrierIndex'],
+                        outputCols=['DepTimeVec', 'ArrTimeVec', 'carrierVec'])
 
 # FEATURE SELECTION
-assembler = VectorAssembler(inputCols=[
-    'DepDelay', 'DayOfWeekVec', 'MonthVec', 'carrierVec'
-], outputCol='features')
+input_cols = ['DepDelay', "TaxiOut", "carrierVec", 'DepTimeVec', 'ArrTimeVec']
+assembler = VectorAssembler(inputCols=input_cols, outputCol='features')
 
 # MACHINE LEARNING
 # Split data
-flights_train, flights_test = airports.randomSplit([0.05, 0.8], seed=123)#[0.9, 0.1], seed=123)
+flights_train, flights_test = airports.randomSplit([0.75, 0.25], seed=123)
 flights_train.show()
 
 # Set up the regressor for choice of user and define the parameters for hyperparameter tuning
 if reg_type == "random_forest":
     reg = RandomForestRegressor(featuresCol='features', labelCol='ArrDelay')
 
-    params = ParamGridBuilder().addGrid(reg.numTrees, [3]) \
-        .addGrid(reg.maxDepth, [5]) \
+    params = ParamGridBuilder().addGrid(reg.numTrees, [4]) \
+        .addGrid(reg.maxDepth, [6]) \
         .build()
 elif reg_type == "dec_tree":
     reg = DecisionTreeRegressor(featuresCol='features', labelCol='ArrDelay', impurity='variance')
@@ -83,8 +89,8 @@ elif reg_type == "dec_tree":
 else:
     reg = LinearRegression(featuresCol='features', labelCol='ArrDelay')
 
-    params = ParamGridBuilder().addGrid(reg.regParam, [0.01]) \
-        .addGrid(reg.elasticNetParam, [0.5]) \
+    params = ParamGridBuilder().addGrid(reg.regParam, [0, 0.5]) \
+        .addGrid(reg.elasticNetParam, [0, 0.5, 1]) \
         .build()
 
 # Construct a pipeline of preprocessing, feature engineering, selection and regressor
@@ -96,7 +102,7 @@ rmse = RegressionEvaluator(labelCol='ArrDelay')
 # Start the actual modelling
 print("Start Model Fitting")
 start = time.time()
-cv = CrossValidator(estimator=pipeline, estimatorParamMaps=params, evaluator=rmse, numFolds=2)
+cv = CrossValidator(estimator=pipeline, estimatorParamMaps=params, evaluator=rmse, numFolds=3)
 cv_model = cv.fit(flights_train)
 print("Time taken to develop model: " + str(time.time()-start) + 's.')
 

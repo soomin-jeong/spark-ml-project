@@ -8,10 +8,13 @@ spark = SparkSession.builder.appName('Delay Classifier').master('local[*]').getO
 
 FORBIDDEN_VARS = ["ArrTime", "ActualElapsedTime", "AirTime", "TaxiIn", "Diverted", "CarrierDelay", "WeatherDelay", "NASDelay", "SecurityDelay", "LateAircraftDelay"]
 
+EXCLUDED_VARS = ["Year", "Origin", "Dest", "CancellationCode"]
+
 
 class DataProcessor(object):
-    def drop_forbidden_variables(self, dataset):
-        return dataset.drop(FORBIDDEN_VARS, axis=1)
+
+    def drop_forbidden_and_excluded_variables(self, dataset):
+        return dataset.drop(FORBIDDEN_VARS + EXCLUDED_VARS)
 
     def drop_duplicated_data(self, dataset):
         return dataset.drop_duplicates()
@@ -23,10 +26,6 @@ class DataProcessor(object):
         no_cancelled_flights = dataset[dataset['Cancelled'] == 0]
         no_cancelled_flights.pop('Cancelled')
         return no_cancelled_flights
-
-    def remove_cancelleation_code(self, dataset):
-        dataset.pop("CancellationCode")
-        return dataset
 
     def convert_date_fields(self, dataset):
         if 'DepTS' in dataset and 'CSRDepTS' in dataset:
@@ -59,12 +58,12 @@ class DataProcessor(object):
         return dataset
 
     def run_all_data_processing(self, dataset):
-        dataset = self.drop_duplicated_data(dataset)
-        dataset = self.drop_forbidden_variables(dataset)
-        dataset = self.remove_null_arr_delay(dataset)
+        dataset = self.drop_forbidden_and_excluded_variables(dataset)
         dataset = self.remove_cancelled_flights(dataset)
-        dataset = self.remove_cancelleation_code(dataset)
+        dataset = self.drop_duplicated_data(dataset)
+        dataset = self.remove_null_arr_delay(dataset)
         dataset = self.convert_date_fields(dataset)
         return dataset
+
 
 data_processor = DataProcessor()
