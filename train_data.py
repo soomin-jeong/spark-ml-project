@@ -11,8 +11,37 @@ from pyspark.ml.evaluation import RegressionEvaluator
 from process_data import data_processor as dp
 from load_data import data_loader as dl
 
+from pyspark.ml.linalg import Vectors
+from pyspark.ml import Pipeline
+from pyspark.ml.feature import StringIndexer, OneHotEncoder, VectorAssembler
+from pyspark.sql.functions import col
+
 
 class DataTrainer(object):
+    def get_dummy(self, df, categoricalCols, continuousCols, labelCol):
+
+        indexers = [StringIndexer(inputCol=c, outputCol="{0}_indexed".format(c))
+                    for c in categoricalCols]
+
+        # default setting: dropLast=True
+        encoders = [OneHotEncoder(inputCol=indexer.getOutputCol(),
+                                  outputCol="{0}_encoded".format(indexer.getOutputCol()))
+                    for indexer in indexers]
+
+        assembler = VectorAssembler(inputCols=[encoder.getOutputCol() for encoder in encoders]
+                                              + continuousCols, outputCol="features")
+
+        pipeline = Pipeline(stages=indexers + encoders + [assembler])
+
+        model = pipeline.fit(df)
+        data = model.transform(df)
+
+        data = data.withColumn('label', col(labelCol))
+
+        return data.select('features', 'label')
+
+    # def trans_data(self, data):
+    #     return data.rdd.map(lambda r: [Vectors.dense(r[1:]), r[0]]).toDF(['features', 'label'])
 
     def random_forest(self):
         # SET UP OF ENVIRONMENT
@@ -27,36 +56,23 @@ class DataTrainer(object):
         pd_data.pop('CRSDepTime')
         pd_data.pop('CRSArrTime')
 
-        pd_data.pop('Origin')
-        pd_data.pop('Dest')
+        df_data = spark.createDataFrame(pd_data)
 
+        categoricalCols = ['Month', 'DayofMonth', 'DayOfWeek']
+        continuousCols = ['CRSElapsedTime', 'DepDelay', 'Distance', 'TaxiOut', 'DepHour', 'DepMinute', 'CSRDepHour', 'CSRDepMinute']
+        labelCol = ['ArrDelay']
 
-        data = spark.createDataFrame(pd_data)
-
-        data = data.withColumn('ArrDelay', data['ArrDelay'].cast(IntegerType())) \
-            .withColumn('DepDelay', data['DepDelay'].cast(IntegerType())) \
-            .withColumn('Distance', data['Distance'].cast(IntegerType())) \
-            .withColumn('DayOfWeek', data['DayOfWeek'].cast(IntegerType())) \
-            .withColumn('Month', data['Month'].cast(IntegerType())) \
-            .withColumn('DepHour', data['DepHour'].cast(IntegerType())) \
-            .withColumn('DepMinute', data['DepMinute'].cast(IntegerType())) \
-            .withColumn('CSRDepHour', data['CSRDepHour'].cast(IntegerType())) \
-            .withColumn('CSRDepMinute', data['CSRDepMinute'].cast(IntegerType()))
-
-        stringIndexer = \
-            StringIndexer(inputCols=['DayOfWeek', 'Month'],
-                          outputCols=['DayOfWeek_idx', 'Month_idx'])
+        transformed_data = self.get_dummy(df_data, categoricalCols, continuousCols, labelCol)
+        transformed_data.show(5)
 
         # Split the data into training and test sets (30% held out for testing)
-        (trainingData, testData) = data.randomSplit([0.7, 0.3])
+        (trainingData, testData) = transformed_data.randomSplit([0.7, 0.3])
 
-        # Train a RandomForest model..
+        # Train a RandomForest model.
         rf = RandomForestRegressor()
 
         # Chain indexer and forest in a Pipeline
-        pipeline = Pipeline(stages=[stringIndexer, rf])
-
-        print("64")
+        pipeline = Pipeline(stages=[rf])
 
         # Train model.  This also runs the indexer.
         model = pipeline.fit(trainingData)
@@ -65,11 +81,11 @@ class DataTrainer(object):
         predictions = model.transform(testData)
 
         # Select example rows to display.
-        predictions.select("prediction", "ArrDelay").show(5)
+        predictions.select("prediction", "label", "features").show(5)
 
         # Select (prediction, true label) and compute test error
         evaluator = RegressionEvaluator(
-            labelCol="ArrDelay", predictionCol="prediction", metricName="rmse")
+            labelCol="label", predictionCol="prediction", metricName="rmse")
         rmse = evaluator.evaluate(predictions)
         print("Root Mean Squared Error (RMSE) on test data = %g" % rmse)
 

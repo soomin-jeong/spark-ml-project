@@ -8,13 +8,13 @@ spark = SparkSession.builder.appName('Delay Classifier').master('local[*]').getO
 
 FORBIDDEN_VARS = ["ArrTime", "ActualElapsedTime", "AirTime", "TaxiIn", "Diverted", "CarrierDelay", "WeatherDelay", "NASDelay", "SecurityDelay", "LateAircraftDelay"]
 
-EXCLUDED_VARS = ["Year", "Origin", "Dest", "CancellationCode"]
+EXCLUDED_VARS = ["Year", "Origin", "Dest", "CancellationCode", "FlightNum", "TailNum"]
 
 
 class DataProcessor(object):
 
     def drop_forbidden_and_excluded_variables(self, dataset):
-        return dataset.drop(FORBIDDEN_VARS + EXCLUDED_VARS)
+        return dataset.drop(FORBIDDEN_VARS + EXCLUDED_VARS, axis=1)
 
     def drop_duplicated_data(self, dataset):
         return dataset.drop_duplicates()
@@ -31,22 +31,22 @@ class DataProcessor(object):
         if 'DepTS' in dataset and 'CSRDepTS' in dataset:
             return dataset
 
-        temp_ts = dataset[["Year", "Month", "DayofMonth"]].astype(str).copy()
+        temp_ts = dataset[["Month", "DayofMonth"]].astype(str).copy()
 
         # Actual departure time
         temp_ts['Hour'] = (dataset["DepTime"] // 100).astype(int).astype(str)
         temp_ts['Minute'] = (dataset["DepTime"] % 100).astype(int).astype(str)
 
-        temp_ts['Time'] = temp_ts['Year'] + '-' + temp_ts['Month'] + '-' + temp_ts['DayofMonth'] + ' ' \
-                          + temp_ts['Hour'] + ':' + temp_ts['Minute']
-        temp_ts['DepTS'] = pd.to_datetime(temp_ts['Time'], format='%Y-%m-%d %H:%M', errors='coerce')
+        # temp_ts['Time'] = temp_ts['Year'] + '-' + temp_ts['Month'] + '-' + temp_ts['DayofMonth'] + ' ' \
+        #                   + temp_ts['Hour'] + ':' + temp_ts['Minute']
+        # temp_ts['DepTS'] = pd.to_datetime(temp_ts['Time'], format='%Y-%m-%d %H:%M', errors='coerce')
 
         # Scheduled departure time
         temp_ts['CSRDepHour'] = (dataset["CRSDepTime"] // 100).astype(int).astype(str)
         temp_ts['CSRDepMinute'] = (dataset["CRSDepTime"] % 100).astype(int).astype(str)
-        temp_ts['CSRTime'] = temp_ts['Year'] + '-' + temp_ts['Month'] + '-' + temp_ts['DayofMonth'] + ' ' + \
-                             temp_ts['CSRDepHour'] + ':' + temp_ts['CSRDepMinute']
-        temp_ts['CSRDepTS'] = pd.to_datetime(temp_ts['CSRTime'], format='%Y-%m-%d %H:%M', errors='coerce')
+        # temp_ts['CSRTime'] = temp_ts['Year'] + '-' + temp_ts['Month'] + '-' + temp_ts['DayofMonth'] + ' ' + \
+        #                      temp_ts['CSRDepHour'] + ':' + temp_ts['CSRDepMinute']
+        # temp_ts['CSRDepTS'] = pd.to_datetime(temp_ts['CSRTime'], format='%Y-%m-%d %H:%M', errors='coerce')
 
         # dataset['DepTS'] = temp_ts['DepTS']
         dataset['DepHour'] = temp_ts['Hour']
@@ -63,6 +63,7 @@ class DataProcessor(object):
         dataset = self.drop_duplicated_data(dataset)
         dataset = self.remove_null_arr_delay(dataset)
         dataset = self.convert_date_fields(dataset)
+        print(dataset.columns)
         return dataset
 
 
