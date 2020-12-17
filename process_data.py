@@ -35,6 +35,9 @@ class DataProcessor(object):
     def remove_cancelleation_code(self, dataset):
         return dataset.drop("CancellationCode", axis=1, inplace=True)
 
+    def remove_origin_and_destination(self, dataset):
+        return dataset.drop(["Origin", "Dest"], axis=1, inplace=True)
+
     def convert_date_fields(self, dataset):
         if 'DepTS' in dataset and 'CSRDepTS' in dataset:
             return dataset
