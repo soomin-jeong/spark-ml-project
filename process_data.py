@@ -55,6 +55,9 @@ class DataProcessor(object):
         # dataset['CSRDepTS'] = temp_ts['CSRDepTS']
         dataset['CSRDepHour'] = temp_ts['CSRDepHour']
         dataset['CSRDepMinute'] = temp_ts['CSRDepMinute']
+
+        dataset.pop('DepTime')
+        dataset.pop('CRSDepTime')
         return dataset
 
     def run_all_data_processing(self, dataset):
