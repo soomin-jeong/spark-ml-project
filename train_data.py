@@ -39,7 +39,7 @@ class DataTrainer(object):
         (trainingData, testData) = transformed_data.randomSplit([0.7, 0.3])
 
         # Train a RandomForest model.
-        rf = RandomForestRegressor(featuresCol="indexedFeatures", maxBins=8, numTrees=5)
+        rf = RandomForestRegressor(featuresCol="indexedFeatures", maxBins=8, numTrees=2)
 
         # Chain indexer and forest in a Pipeline
         pipeline = Pipeline(stages=[featureIndexer, rf])
