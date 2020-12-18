@@ -11,25 +11,34 @@ spark = SparkSession.builder.appName('Delay Classifier').master('local[*]').getO
 
 FORBIDDEN_VARS = ["ArrTime", "ActualElapsedTime", "AirTime", "TaxiIn", "Diverted", "CarrierDelay", "WeatherDelay",
                   "NASDelay", "SecurityDelay", "LateAircraftDelay"]
-EXCLUDED_VARS = ["Year", "Origin", "Dest", "CancellationCode", "FlightNum", "TailNum"]
 
-NOMINAL_CATEGORY_VARS = ["UniqueCarrier"]
-ORDIAL_CATEGORY_VARS = []
-NUMERICAL_VARS = []
+# TODO: UniqueCarrier Makes an error on DT, to test remove "UniqueCarrier" from the list below.
+EXCLUDED_VARS = ["Year", "Origin", "Dest", "CancellationCode", "FlightNum", "TailNum", "UniqueCarrier"]
 
 
 class DataProcessor(object):
     def __init__(self, spark):
         self.spark = spark
 
-        # TODO: Are the variables analyzed correctly?
+        # TODO: Are the variables analyzed correctly? Exceptions: DayofMonth, Month
         self.nominal_category_vars = ["UniqueCarrier", "FlightNum", "TailNum", "Cancelled"]
-        self.ordial_category_vars = ["Year", "Month", "DayofMonth", "DayOfWeek", ]
-        self.numerical_vars = ["CRSElapsedTime", "ArrDelay", "DepDelay", "Distance","TaxiOut"]
+        self.ordinal_category_vars = ["Year", "DayOfWeek"]
+        self.numerical_vars = ["CRSElapsedTime", "ArrDelay", "DepDelay", "Distance", "TaxiOut", "DayofMonth", "Month"]
         self.string_vars = ["DepTime", "CRSDepTime", "ArrTime", "CRSArrTime", "Origin", "Dest", "CancellationCode"]
+        # DayofMonth, Month : though they are ordial category, since there are too many categories (up to 12 and 31),
+        #              we moved it to numerical vars
+
+    def remove_from_list(self, list_to_check, list_to_survive):
+        to_remove = []
+        for each in list_to_check:
+            if each not in list_to_survive:
+                to_remove.append(each)
+        for each in to_remove:
+            list_to_check.remove(each)
 
     def update_post_proessing_vars(self, post_process_vars):
-
+        for each_var_list in [self.nominal_category_vars, self.ordinal_category_vars, self.numerical_vars, self.string_vars]:
+            self.remove_from_list(each_var_list, post_process_vars)
 
     def drop_forbidden_and_excluded_variables(self, dataset):
         return dataset.drop(*(FORBIDDEN_VARS + EXCLUDED_VARS))
@@ -49,10 +58,15 @@ class DataProcessor(object):
         dataset = dataset\
             .withColumn('DepHour', col('DepTime') / 100) \
             .withColumn('DepMinute', col('DepTime') % 100) \
-            .withColumn('CSRDepHour', col('CRSDepTime') / 100) \
-            .withColumn('CSRDepMinute', col('CRSDepTime') % 100)
+            .withColumn('CRSDepHour', col('CRSDepTime') / 100) \
+            .withColumn('CRSDepMinute', col('CRSDepTime') % 100) \
+            .withColumn('CRSArrHour', col('CRSArrTime') / 100) \
+            .withColumn('CRSArrMinute', col('CRSArrTime') % 100)
 
-        dataset = dataset.drop('DepTime', 'CRSDepTime')
+        self.numerical_vars = self.numerical_vars + ['DepHour', 'DepMinute', 'CRSDepHour', 'CRSDepMinute',
+                                                     'CRSArrHour', 'CRSArrMinute']
+
+        dataset = dataset.drop('DepTime', 'CRSDepTime', 'CRSArrTime')
         return dataset
 
     def convert_datatypes(self, dataset):

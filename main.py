@@ -9,10 +9,10 @@ from predict_data import DataPredictor
 
 
 LINEAR_REGRESSION = 1
-DECEISION_TREE = 2
+DECISION_TREE = 2
 RANDOM_FOREST = 3
 
-ALGORITHM_OPTIONS = [LINEAR_REGRESSION, DECEISION_TREE, RANDOM_FOREST]
+ALGORITHM_OPTIONS = [LINEAR_REGRESSION, DECISION_TREE, RANDOM_FOREST]
 
 
 class MachineLearningRunner(object):
@@ -34,22 +34,23 @@ class MachineLearningRunner(object):
     def train_data(self, processed_data):
         if self.algorithm == LINEAR_REGRESSION:
             return self.dt.linear_regression(processed_data)
-        elif self.algorithm == DECEISION_TREE:
+        elif self.algorithm == DECISION_TREE:
             return self.dt.decision_tree(processed_data)
         return self.dt.random_forest(processed_data)
 
-    def predict(self, processed_data, confParams):
+    def predict(self, processed_data, saved_model):
         if self.algorithm == LINEAR_REGRESSION:
-            self.dpr.predict_lr(processed_data, confParams)
-        elif self.algorithm == DECEISION_TREE:
-            self.dpr.predict_dt(processed_data, confParams)
-        self.dpr.predict_rf(processed_data, confParams)
+            self.dpr.predict_lr(processed_data, saved_model)
+        elif self.algorithm == DECISION_TREE:
+            print("DECISON...")
+            self.dpr.predict_dt(processed_data, saved_model)
+        self.dpr.predict_rf(processed_data, saved_model)
 
     def run(self, data_filepath):
         input_dataset = self.load_data(data_filepath)
         processed_data = self.process_data(input_dataset)
-        confParams = self.train_data(processed_data)
-        self.predict(processed_data, confParams)
+        saved_model = self.train_data(processed_data)
+        self.predict(processed_data, saved_model)
         print("Finished!")
 
 
