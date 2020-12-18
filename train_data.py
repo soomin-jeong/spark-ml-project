@@ -29,9 +29,6 @@ class DataTrainer(object):
         return data.rdd.map(lambda r: [Vectors.dense(r[1:8] + r[9:]), r[8]]).toDF(['features', 'label'])
 
     def random_forest(self, data):
-        # SET UP OF ENVIRONMENT
-        # Create a Spark Session
-        spark = SparkSession.builder.config("spark.driver.memory", "15g").appName('Delay Classifier').master('local[*]').getOrCreate()
         transformed_data = self.trans_data(data)
 
         featureIndexer = \
@@ -63,7 +60,6 @@ class DataTrainer(object):
 
         rfModel = model.stages[1]
         print(rfModel)  # summary only
-        spark.stop()
 
 
 
