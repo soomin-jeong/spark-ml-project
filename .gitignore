@@ -1,3 +1,4 @@
 input_dataset/*
 .idea/*
 
+**/.ipynb_checkpoint/**
