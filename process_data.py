@@ -12,12 +12,24 @@ spark = SparkSession.builder.appName('Delay Classifier').master('local[*]').getO
 FORBIDDEN_VARS = ["ArrTime", "ActualElapsedTime", "AirTime", "TaxiIn", "Diverted", "CarrierDelay", "WeatherDelay",
                   "NASDelay", "SecurityDelay", "LateAircraftDelay"]
 EXCLUDED_VARS = ["Year", "Origin", "Dest", "CancellationCode", "FlightNum", "TailNum"]
-CATEGORICAL_VAR = ['UniqueCarrier']
+
+NOMINAL_CATEGORY_VARS = ["UniqueCarrier"]
+ORDIAL_CATEGORY_VARS = []
+NUMERICAL_VARS = []
 
 
 class DataProcessor(object):
     def __init__(self, spark):
         self.spark = spark
+
+        # TODO: Are the variables analyzed correctly?
+        self.nominal_category_vars = ["UniqueCarrier", "FlightNum", "TailNum", "Cancelled"]
+        self.ordial_category_vars = ["Year", "Month", "DayofMonth", "DayOfWeek", ]
+        self.numerical_vars = ["CRSElapsedTime", "ArrDelay", "DepDelay", "Distance","TaxiOut"]
+        self.string_vars = ["DepTime", "CRSDepTime", "ArrTime", "CRSArrTime", "Origin", "Dest", "CancellationCode"]
+
+    def update_post_proessing_vars(self, post_process_vars):
+
 
     def drop_forbidden_and_excluded_variables(self, dataset):
         return dataset.drop(*(FORBIDDEN_VARS + EXCLUDED_VARS))
@@ -47,11 +59,7 @@ class DataProcessor(object):
         def convert_to_integer(dataset, col_name):
             return dataset.withColumn(col_name, dataset[col_name].cast(IntegerType()))
 
-        numerical_cols = dataset.schema.names
-        numerical_cols.remove(*CATEGORICAL_VAR)
-        print(numerical_cols)
-
-        for each in numerical_cols:
+        for each in self.numerical_vars:
             dataset = convert_to_integer(dataset, each)
 
         return dataset
@@ -78,13 +86,18 @@ class DataProcessor(object):
         print("[PROCESSING]: New Schema")
         dataset.printSchema()
         print("================================")
+
+        self.update_post_proessing_vars(dataset.schema.names)
         return dataset
 
-    def transformStringToCategories(self, inputCols, outputsCols):
-        return StringIndexer(inputCols=inputCols, outputCols=outputsCols)
+    def string_indexer(self, input_cols):
+        output_cols = [each_col + "_idx" for each_col in input_cols]
+        return StringIndexer(inputCols=input_cols, outputCols=output_cols), output_cols
 
-    def oneHotEncoder(self, inputCols, outputCols):
-        return OneHotEncoder(inputCols=inputCols, outputCols=outputCols)
+    def one_hot_encoder(self, input_cols):
+        output_cols = [each_col + "_vec" for each_col in input_cols]
+        return OneHotEncoder(inputCols=input_cols, outputCols=output_cols), output_cols
 
-    def vectorAssembler(self, inputCols, outputCol):
-        return VectorAssembler(inputCols=inputCols, outputCol=outputCol)
+    def vector_assembler(self, input_cols):
+        # following the default name, "features" for models
+        return VectorAssembler(inputCols=input_cols, outputCol='features')

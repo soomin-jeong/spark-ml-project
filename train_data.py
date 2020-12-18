@@ -10,28 +10,36 @@ from pyspark.ml.tuning import CrossValidator, ParamGridBuilder
 
 
 class DataTrainer(object):
+    MAX_DEPTH_OPTIONS = [3, 10, 15]
+    MAX_BINS_OPTIONS = [10, 15]
+
     def __init__(self, spark, dp):
         self.spark = spark
         self.dp = dp
+
+    def get_training_and_test_data(self, data):
+        return data.randomSplit([0.7, 0.3], seed=123)
 
     def linear_regression(self, data):
         # train the data
         # print the RMSE
         print("[TRAIN] Linear Regression: printing the evaluation results...")
 
-        # TODO : Linear Regression Model Path
+        # TODO : [TOM] Linear Regression Model Path
         return "dummy model path"
 
-    def preparePipelineForModel(self, inputIndexer, outputIndexer, inputEncoder,
-                                outputEncoder, inputAssembler, outputAssembler, reg):
-        indexer = self.dp.transformStringToCategories(inputIndexer, outputIndexer)
-        encoder = self.dp.oneHotEncoder(inputEncoder, outputEncoder)
+    def prepare_pipeline(self, ordial_categories, nominal_categories, numerical_vars, reg):
 
-        # Feature selection:
-        assembler = self.dp.vectorAssembler(inputAssembler, outputAssembler)
+        s_indexer, s_output_cols = self.dp.string_indexer(ordial_categories)
+        h_encoder, h_output_cols = self.dp.one_hot_encoder(nominal_categories)
+
+        assembler_inputs = numerical_vars.extend(s_output_cols).extend(h_output_cols)
+
+        # Feature selection: returns an aseembler with "features"
+        assembler = self.dp.vector_assembler(assembler_inputs)
 
         # Construct a pipeline of preprocessing, feature engineering, selection and regressor
-        pipeline = Pipeline(stages=[indexer, encoder, assembler, reg])
+        pipeline = Pipeline(stages=[s_indexer, h_encoder, assembler, reg])
         return pipeline
 
     def decision_tree(self, data):
@@ -40,31 +48,23 @@ class DataTrainer(object):
         # Input variables:
         modelPath = "linear_reg" + "3"
 
-        # MACHINE LEARNING
         # Split data
-        flights_train, flights_test = data.randomSplit([0.75, 0.25], seed=123)
-        #flights_train.show()
-
+        flights_train, flights_test = self.get_training_and_test_data()
         reg = DecisionTreeRegressor(featuresCol='features', labelCol='ArrDelay', impurity='variance')
 
-        confParams = {}
-        confParams.update({"maxDepth": [3, 10, 15]})
-        confParams.update({"maxBins":[10, 15]})
-
-        params = ParamGridBuilder().addGrid(reg.maxDepth, confParams.get("maxDepth")) \
-                .addGrid(reg.maxBins, confParams.get("maxBins")) \
+        params = ParamGridBuilder().addGrid(reg.maxDepth, self.MAX_DEPTH_OPTIONS) \
+                .addGrid(reg.maxBins, self.MAX_BINS_OPTIONS) \
                 .build()
+
         # Construct a pipeline of preprocessing, feature engineering, selection and regressor
 
-        inputIndexer = ['UniqueCarrier']
-        outputIndexer = ['carrierIndex']
-        inputEncoder = ['ProcArrTime', 'carrierIndex']
-        outputEncoder = ['DepTimeVec', 'ArrTimeVec', 'carrierVec']
-        inputAssembler = ['DepDelay', "TaxiOut", "carrierVec", 'DepTimeVec', 'ArrTimeVec']
-        outputAssembler = 'features'
+        ordial_categories, nominal_categories, numerical_vars
 
-        pipeline = self.preparePipelineForModel(inputIndexer, outputIndexer, inputEncoder,
-                                                outputEncoder, inputAssembler, outputAssembler, reg)
+        inputIndexer = ['UniqueCarrier']
+        inputEncoder = ['carrierIndex']
+        inputAssembler = ['DepDelay', "TaxiOut", "carrierVec", 'DepTimeVec', 'ArrTimeVec']
+
+        pipeline = self.prepare_pipeline(inputIndexer, inputEncoder, inputAssembler, reg)
 
         # Error measure:
         rmse = RegressionEvaluator(labelCol='ArrDelay')
