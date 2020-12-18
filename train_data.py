@@ -5,32 +5,34 @@ from pyspark.sql import SparkSession
 from pyspark.ml.regression import RandomForestRegressor
 from pyspark.ml.evaluation import RegressionEvaluator
 
-from process_data import data_processor as dp
-from load_data import data_loader as dl
-
 from pyspark.ml.linalg import Vectors
 from pyspark.ml import Pipeline
 from pyspark.ml.feature import StringIndexer, OneHotEncoder, VectorAssembler, VectorIndexer
 
 
 class DataTrainer(object):
+    def __init__(self, spark):
+        self.spark = spark
+
+    def linear_regression(self, data):
+        # train the data
+        # print the RMSE
+        print("[TRAIN] Linear Regression: printing the evaluation results...")
+
+    def decision_tree(self, data):
+        # train the data
+        # print the RMSE
+        print("[TRAIN] Decision Tree: printing the evaluation results...")
+
     def trans_data(self, data):
         print("Transforming the data...")
         return data.rdd.map(lambda r: [Vectors.dense(r[1:8] + r[9:]), r[8]]).toDF(['features', 'label'])
 
-    def random_forest(self):
+    def random_forest(self, data):
         # SET UP OF ENVIRONMENT
         # Create a Spark Session
         spark = SparkSession.builder.config("spark.driver.memory", "15g").appName('Delay Classifier').master('local[*]').getOrCreate()
-
-        # Load the data
-        raw_dataset = dl.load_dataset()
-        pd_data = dp.run_all_data_processing(raw_dataset)
-        pd_data.pop('UniqueCarrier')
-        pd_data.pop('CRSArrTime')
-
-        df_data = spark.createDataFrame(pd_data)
-        transformed_data = self.trans_data(df_data)
+        transformed_data = self.trans_data(data)
 
         featureIndexer = \
             VectorIndexer(inputCol="features", outputCol="indexedFeatures", maxCategories=31).fit(transformed_data)
@@ -64,6 +66,4 @@ class DataTrainer(object):
         spark.stop()
 
 
-data_trainer = DataTrainer()
 
-data_trainer.random_forest()

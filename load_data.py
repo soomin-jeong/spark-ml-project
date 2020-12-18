@@ -1,10 +1,12 @@
 import os
 import sys
-import pandas as pd
 
 
 class DataLoader(object):
     input_filepath = os.path.join(os.getcwd(), 'input_dataset', 'dataset.csv')
+
+    def __init__(self, spark):
+        self.spark = spark
 
     def locate_input_data(self):
         try:
@@ -17,7 +19,4 @@ class DataLoader(object):
         print("[LOAD] Loading the dataset...")
 
         # `pd.read_csv` checks if the input data is empty
-        return pd.read_csv(self.input_filepath)
-
-
-data_loader = DataLoader()
+        return self.spark.read.csv(self.input_filepath, header=True)

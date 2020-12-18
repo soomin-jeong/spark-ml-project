@@ -6,6 +6,7 @@ from pyspark.ml.regression import LinearRegression
 from pyspark.ml.tuning import CrossValidatorModel
 import sys
 
+
 # SET UP OF ENVIRONMENT
 # Create a Spark Session
 spark = SparkSession.builder.appName('Delay Classifier').master('local[*]').getOrCreate()
