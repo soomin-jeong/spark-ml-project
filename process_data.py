@@ -1,6 +1,7 @@
 
 import functools
 
+from pyspark.ml.feature import StringIndexer, OneHotEncoder, VectorAssembler
 from pyspark.sql import SparkSession
 from pyspark.sql.types import IntegerType
 from pyspark.sql.functions import col
@@ -59,16 +60,26 @@ class DataProcessor(object):
         print("[PROCESSING]: Original Schema is")
         dataset.printSchema()
 
-        process_funcs = [self.drop_forbidden_and_excluded_variables,
-                         self.remove_cancelled_flights,
-                         self.drop_duplicated_data,
-                         self.remove_null_arr_delay,
-                         self.split_timestring,
-                         self.convert_datatypes]
-
-        for each in process_funcs:
-            dataset = each(dataset)
+        dataset = self.drop_forbidden_and_excluded_variables(dataset)
+        dataset = self.remove_cancelled_flights(dataset)
+        dataset = self.drop_duplicated_data(dataset)
+        dataset = self.remove_null_arr_delay(dataset)
+        dataset = self.split_timestring(dataset)
+        dataset = self.convert_datatypes(dataset)
 
         print("[PROCESSING]: Finished the data processing...")
         dataset.printSchema()
         return dataset
+
+
+    # Arturo:
+    # Special data processing required by models:
+
+    def transformStringToCategories(self, inputCols, outputsCols):
+        return StringIndexer(inputCols=inputCols, outputCols=outputsCols)
+
+    def oneHotEncoder(self, inputCols, outputCols):
+        return OneHotEncoder(inputCols=inputCols, outputCols=outputCols)
+
+    def vectorAssembler(self, inputCols, outputCol):
+        return VectorAssembler(inputCols=inputCols, outputCol=outputCol)

@@ -8,6 +8,13 @@ class DataLoader(object):
     def __init__(self, spark):
         self.spark = spark
 
+    def setFilePath(self, path):
+        if path != "":
+            self.input_filepath = path
+        else:
+            print("[LOAD] User have not introduced the file path")
+            print("[LOAD] Loading data from default path")
+
     def locate_input_data(self):
         try:
             os.path.exists(self.input_filepath)
