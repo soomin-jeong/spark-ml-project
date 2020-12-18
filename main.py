@@ -15,14 +15,15 @@ RANDOM_FOREST = 3
 ALGORITHM_OPTIONS = [LINEAR_REGRESSION, DECEISION_TREE, RANDOM_FOREST]
 
 
-class Launcher(object):
+class MachineLearningRunner(object):
 
-    def __init__(self):
+    def __init__(self, algorithm):
         self.spark = SparkSession.builder.appName('Delay Classifier').master('local[*]').getOrCreate()
         self.dl = DataLoader(self.spark)
         self.dp = DataProcessor(self.spark)
         self.dt = DataTrainer(self.spark, self.dp)
         self.dpr = DataPredictor(self.spark)
+        self.algorithm = algorithm
 
     def load_data(self, filepath):
         return self.dl.load_dataset(filepath)
@@ -30,33 +31,29 @@ class Launcher(object):
     def process_data(self, input_dataset):
         return self.dp.run_all_data_processing(input_dataset)
 
-    def train_data(self, processed_data, model):
-        if model == LINEAR_REGRESSION:
-            # linear regression
-            self.dt.linear_regression(processed_data)
-        elif model == "dt":
-            # decision tree
-            confParams = self.dt.decision_tree(processed_data)
-        else:
-            confParams = self.dt.random_forest(processed_data)
-        return confParams
+    def train_data(self, processed_data):
+        if self.algorithm == LINEAR_REGRESSION:
+            return self.dt.linear_regression(processed_data)
+        elif self.algorithm == DECEISION_TREE:
+            return self.dt.decision_tree(processed_data)
+        return self.dt.random_forest(processed_data)
 
-    def predict(self, processed_data, confParams, model):
-        if model == "lr":
+    def predict(self, processed_data, confParams):
+        if self.algorithm == LINEAR_REGRESSION:
             self.dpr.predict_lr(processed_data, confParams)
-        elif model == "dt":
-            # decision tree:
+        elif self.algorithm == DECEISION_TREE:
             self.dpr.predict_dt(processed_data, confParams)
-        else:
-            self.dpr.predict_rf(processed_data, confParams)
+        self.dpr.predict_rf(processed_data, confParams)
 
-    def run(self, data_filepath, algorithm):
+    def run(self, data_filepath):
         input_dataset = self.load_data(data_filepath)
         processed_data = self.process_data(input_dataset)
-        confParams = self.train_data(processed_data, algorithm)
-        self.predict(processed_data, confParams, algorithm)
+        confParams = self.train_data(processed_data)
+        self.predict(processed_data, confParams)
         print("Finished!")
 
+
+class Launcher(object):
     def check_filepath(self, filepath):
         # TODO: Are there any exceptions to take care of?
 
@@ -84,10 +81,6 @@ class Launcher(object):
         if algorithm not in ALGORITHM_OPTIONS:
             return False, "algorithm should be {}, {} or {}".format(*ALGORITHM_OPTIONS)
         return True, None
-
-    def launch_app(self, data_filepath, algorithm):
-        runner = Launcher()
-        runner.run(data_filepath, algorithm)
 
 
 launcher = Launcher()
@@ -123,6 +116,7 @@ if __name__ == '__main__':
             continue
         correct_syntax = True
 
-    launcher.launch_app(data_filepath, algorithm)
+    ml_runner = MachineLearningRunner(algorithm)
+    ml_runner.run(data_filepath)
 
 

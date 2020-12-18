@@ -19,6 +19,9 @@ class DataTrainer(object):
         # print the RMSE
         print("[TRAIN] Linear Regression: printing the evaluation results...")
 
+        # TODO : Linear Regression Model Path
+        return "dummy model path"
+
     def preparePipelineForModel(self, inputIndexer, outputIndexer, inputEncoder,
                                 outputEncoder, inputAssembler, outputAssembler, reg):
         indexer = self.dp.transformStringToCategories(inputIndexer, outputIndexer)
@@ -30,7 +33,6 @@ class DataTrainer(object):
         # Construct a pipeline of preprocessing, feature engineering, selection and regressor
         pipeline = Pipeline(stages=[indexer, encoder, assembler, reg])
         return pipeline
-
 
     def decision_tree(self, data):
         # Transform strings to categories
