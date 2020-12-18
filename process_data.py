@@ -60,8 +60,9 @@ class DataProcessor(object):
         return dataset.dropna()
 
     def run_all_data_processing(self, dataset):
-        print("[PROCESSING]: Original Schema is")
+        print("[PROCESSING]: Original Schema")
         dataset.printSchema()
+        print("================================")
 
         process_funcs = [self.drop_forbidden_and_excluded_variables,
                          self.remove_cancelled_flights,
@@ -74,8 +75,9 @@ class DataProcessor(object):
         for each in process_funcs:
             dataset = each(dataset)
 
-        print("[PROCESSING]: Finished the data processing...")
+        print("[PROCESSING]: New Schema")
         dataset.printSchema()
+        print("================================")
         return dataset
 
     def transformStringToCategories(self, inputCols, outputsCols):

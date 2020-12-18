@@ -33,8 +33,6 @@ class DataTrainer(object):
 
 
     def decision_tree(self, data):
-        # train the data
-        # print the RMSE
         # Transform strings to categories
 
         # Input variables:
@@ -74,7 +72,7 @@ class DataTrainer(object):
         start = time.time()
         cv = CrossValidator(estimator=pipeline, estimatorParamMaps=params, evaluator=rmse, numFolds=3)
         cv_model = cv.fit(flights_train)
-        print("Time taken to develop model: " + str(time.time() - start()) + 's.')
+        print("Time taken to develop model: " + str(time.time() - start) + 's.')
         # Save the model
         cv_model.write().overwrite().save(modelPath)
         confParams.update({"modelPath": modelPath})
@@ -87,7 +85,7 @@ class DataTrainer(object):
 
     def random_forest(self, data):
         featureIndexer = \
-            VectorIndexer(inputCol="features", outputCol="indexedFeatures", maxCategories=31).fit(transformed_data)
+            VectorIndexer(inputCol="features", outputCol="indexedFeatures", maxCategories=31).fit(data)
 
         # Split the data into training and test sets (30% held out for testing)
         (trainingData, testData) = data.randomSplit([0.7, 0.3])

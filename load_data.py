@@ -1,29 +1,10 @@
-import os
-import sys
 
 
 class DataLoader(object):
-    input_filepath = os.path.join(os.getcwd(), 'input_dataset', 'dataset.csv')
 
     def __init__(self, spark):
         self.spark = spark
 
-    def setFilePath(self, path):
-        if path != "":
-            self.input_filepath = path
-        else:
-            print("[LOAD] User have not introduced the file path")
-            print("[LOAD] Loading data from default path")
-
-    def locate_input_data(self):
-        try:
-            os.path.exists(self.input_filepath)
-        except FileNotFoundError:
-            print('[LOAD] Error on loading the dataset...')
-            sys.exit(1)
-
-    def load_dataset(self):
+    def load_dataset(self, filepath):
         print("[LOAD] Loading the dataset...")
-
-        # `pd.read_csv` checks if the input data is empty
-        return self.spark.read.csv(self.input_filepath, header=True)
+        return self.spark.read.csv(filepath, header=True)
