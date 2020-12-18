@@ -8,12 +8,14 @@ from train_data import DataTrainer
 from predict_data import DataPredictor
 
 
-LINEAR_REGRESSION = "lr"
-DECEISION_TREE = "dt"
-RANDOM_FOREST = "rf"
+LINEAR_REGRESSION = 1
+DECEISION_TREE = 2
+RANDOM_FOREST = 3
+
+ALGORITHM_OPTIONS = [LINEAR_REGRESSION, DECEISION_TREE, RANDOM_FOREST]
 
 
-class ArrivalDelayMachineLearningRunner(object):
+class Launcher(object):
 
     def __init__(self):
         self.spark = SparkSession.builder.appName('Delay Classifier').master('local[*]').getOrCreate()
@@ -55,9 +57,6 @@ class ArrivalDelayMachineLearningRunner(object):
         self.predict(processed_data, confParams, algorithm)
         print("Finished!")
 
-
-class Launcher(object):
-
     def check_filepath(self, filepath):
         # TODO: Are there any exceptions to take care of?
 
@@ -82,12 +81,12 @@ class Launcher(object):
     def check_algorithm(self, algorithm):
         # TODO: Are there any exceptions to take care of?
 
-        if algorithm not in [1, 2, 3]:
-            return False, "algorithm should be 1, 2 or 3"
+        if algorithm not in ALGORITHM_OPTIONS:
+            return False, "algorithm should be {}, {} or {}".format(*ALGORITHM_OPTIONS)
         return True, None
 
     def launch_app(self, data_filepath, algorithm):
-        runner = ArrivalDelayMachineLearningRunner()
+        runner = Launcher()
         runner.run(data_filepath, algorithm)
 
 
@@ -101,7 +100,7 @@ if __name__ == '__main__':
     # default values
     correct_syntax = False
     data_filepath = os.path.join(os.getcwd(), 'input_dataset', 'dataset.csv')
-    algorithm = 1
+    algorithm = LINEAR_REGRESSION
 
     while not correct_syntax:
         data_filepath_input = input("Enter the filepath of a CSV dataset (by default, input_dataset/dataset.csv): ")
@@ -111,7 +110,7 @@ if __name__ == '__main__':
         if data_filepath_input:
             data_filepath = data_filepath_input
         if algorithm_input:
-            algorithm = algorithm_input
+            algorithm = int(algorithm_input)
 
         right_file_path, f_error_msg = launcher.check_filepath(data_filepath)
         if not right_file_path:
