@@ -1,13 +1,10 @@
-import pandas as pd
 
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import monotonically_increasing_id
-from pyspark.sql.types import IntegerType
 
 spark = SparkSession.builder.appName('Delay Classifier').master('local[*]').getOrCreate()
 
-FORBIDDEN_VARS = ["ArrTime", "ActualElapsedTime", "AirTime", "TaxiIn", "Diverted", "CarrierDelay", "WeatherDelay", "NASDelay", "SecurityDelay", "LateAircraftDelay"]
-
+FORBIDDEN_VARS = ["ArrTime", "ActualElapsedTime", "AirTime", "TaxiIn", "Diverted", "CarrierDelay", "WeatherDelay",
+                  "NASDelay", "SecurityDelay", "LateAircraftDelay"]
 EXCLUDED_VARS = ["Year", "Origin", "Dest", "CancellationCode", "FlightNum", "TailNum"]
 
 
@@ -28,33 +25,15 @@ class DataProcessor(object):
         return no_cancelled_flights
 
     def convert_date_fields(self, dataset):
+        def convert_string_to_hour_and_minute(str_time):
+            return (dataset[str_time] // 100).astype(int),  (dataset[str_time] % 100).astype(int)
+
+        # check if it was already processed
         if 'DepTS' in dataset and 'CSRDepTS' in dataset:
             return dataset
 
-        temp_ts = dataset[["Month", "DayofMonth"]].astype(str).copy()
-
-        # Actual departure time
-        temp_ts['Hour'] = (dataset["DepTime"] // 100).astype(int).astype(str)
-        temp_ts['Minute'] = (dataset["DepTime"] % 100).astype(int).astype(str)
-
-        # temp_ts['Time'] = temp_ts['Year'] + '-' + temp_ts['Month'] + '-' + temp_ts['DayofMonth'] + ' ' \
-        #                   + temp_ts['Hour'] + ':' + temp_ts['Minute']
-        # temp_ts['DepTS'] = pd.to_datetime(temp_ts['Time'], format='%Y-%m-%d %H:%M', errors='coerce')
-
-        # Scheduled departure time
-        temp_ts['CSRDepHour'] = (dataset["CRSDepTime"] // 100).astype(int).astype(str)
-        temp_ts['CSRDepMinute'] = (dataset["CRSDepTime"] % 100).astype(int).astype(str)
-        # temp_ts['CSRTime'] = temp_ts['Year'] + '-' + temp_ts['Month'] + '-' + temp_ts['DayofMonth'] + ' ' + \
-        #                      temp_ts['CSRDepHour'] + ':' + temp_ts['CSRDepMinute']
-        # temp_ts['CSRDepTS'] = pd.to_datetime(temp_ts['CSRTime'], format='%Y-%m-%d %H:%M', errors='coerce')
-
-        # dataset['DepTS'] = temp_ts['DepTS']
-        dataset['DepHour'] = temp_ts['Hour']
-        dataset['DepMinute'] = temp_ts['Minute']
-
-        # dataset['CSRDepTS'] = temp_ts['CSRDepTS']
-        dataset['CSRDepHour'] = temp_ts['CSRDepHour']
-        dataset['CSRDepMinute'] = temp_ts['CSRDepMinute']
+        dataset['DepHour'], dataset['DepMinute'] = convert_string_to_hour_and_minute(dataset['DepTime'])
+        dataset['CSRDepHour'], dataset['CSRDepMinute'] = convert_string_to_hour_and_minute(dataset['CRSDepTime'])
 
         dataset.pop('DepTime')
         dataset.pop('CRSDepTime')
@@ -66,6 +45,8 @@ class DataProcessor(object):
         dataset = self.drop_duplicated_data(dataset)
         dataset = self.remove_null_arr_delay(dataset)
         dataset = self.convert_date_fields(dataset)
+
+        print("[PROCESSING]: Finished the data processing...")
         print(dataset.columns)
         return dataset
 

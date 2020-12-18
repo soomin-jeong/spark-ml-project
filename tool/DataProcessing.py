@@ -174,8 +174,6 @@ for k in range(2,10):
     errors.append(intra_distance)
 
 # plot intracluster distance:
-import pandas as np
-import numpy as np
 import matplotlib.pyplot as plt
 
 with PdfPages('elbow_kmens.pdf') as pdf:
