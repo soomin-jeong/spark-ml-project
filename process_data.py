@@ -56,24 +56,27 @@ class DataProcessor(object):
 
         return dataset
 
+    def drop_null_values(self, dataset):
+        return dataset.dropna()
+
     def run_all_data_processing(self, dataset):
         print("[PROCESSING]: Original Schema is")
         dataset.printSchema()
 
-        dataset = self.drop_forbidden_and_excluded_variables(dataset)
-        dataset = self.remove_cancelled_flights(dataset)
-        dataset = self.drop_duplicated_data(dataset)
-        dataset = self.remove_null_arr_delay(dataset)
-        dataset = self.split_timestring(dataset)
-        dataset = self.convert_datatypes(dataset)
+        process_funcs = [self.drop_forbidden_and_excluded_variables,
+                         self.remove_cancelled_flights,
+                         self.drop_duplicated_data,
+                         self.remove_null_arr_delay,
+                         self.split_timestring,
+                         self.convert_datatypes,
+                         self.drop_null_values]
+
+        for each in process_funcs:
+            dataset = each(dataset)
 
         print("[PROCESSING]: Finished the data processing...")
         dataset.printSchema()
         return dataset
-
-
-    # Arturo:
-    # Special data processing required by models:
 
     def transformStringToCategories(self, inputCols, outputsCols):
         return StringIndexer(inputCols=inputCols, outputCols=outputsCols)
