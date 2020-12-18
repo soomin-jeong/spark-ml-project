@@ -1,6 +1,4 @@
-import time
 
-from pyspark.sql import SparkSession
 
 from pyspark.ml.regression import RandomForestRegressor
 from pyspark.ml.evaluation import RegressionEvaluator
@@ -8,6 +6,8 @@ from pyspark.ml.evaluation import RegressionEvaluator
 from pyspark.ml.linalg import Vectors
 from pyspark.ml import Pipeline
 from pyspark.ml.feature import StringIndexer, OneHotEncoder, VectorAssembler, VectorIndexer
+from pyspark.ml.tuning import CrossValidatorModel
+from pyspark.ml.tuning import CrossValidator, ParamGridBuilder
 
 
 class DataTrainer(object):
@@ -24,42 +24,68 @@ class DataTrainer(object):
         # print the RMSE
         print("[TRAIN] Decision Tree: printing the evaluation results...")
 
-    def trans_data(self, data):
-        print("Transforming the data...")
-        return data.rdd.map(lambda r: [Vectors.dense(r[1:8] + r[9:]), r[8]]).toDF(['features', 'label'])
-
     def random_forest(self, data):
-        transformed_data = self.trans_data(data)
-
-        featureIndexer = \
-            VectorIndexer(inputCol="features", outputCol="indexedFeatures", maxCategories=31).fit(transformed_data)
-
         # Split the data into training and test sets (30% held out for testing)
-        (trainingData, testData) = transformed_data.randomSplit([0.7, 0.3])
+        (trainingData, testData) = data.randomSplit([0.7, 0.3])
+
+        input_cols = data.schema.names
+        input_cols.remove('ArrDelay')
+
+        stringIndexer = StringIndexer(inputCol='UniqueCarrier', outputCol='carrierIndex')
+        input_cols.append('carrierIndex')
+        input_cols.remove('UniqueCarrier')
+
+        vectorAssember = VectorAssembler(inputCols=input_cols, outputCol="features")
+        featureIndexer = VectorIndexer(inputCol="features", outputCol="indexedFeatures", maxCategories=31)
 
         # Train a RandomForest model.
-        rf = RandomForestRegressor(featuresCol="indexedFeatures", maxBins=8, numTrees=2)
+        rf = RandomForestRegressor(featuresCol="indexedFeatures", labelCol="ArrDelay") #maxBins=8, numTrees=2)
 
         # Chain indexer and forest in a Pipeline
-        pipeline = Pipeline(stages=[featureIndexer, rf])
+        pipeline = Pipeline(stages=[stringIndexer, vectorAssember, featureIndexer, rf])
+        #
+        # # Train model.  This also runs the indexer.
+        # model = pipeline.fit(trainingData)
+        #
+        # # Make predictions.
+        # predictions = model.transform(testData)
+        #
+        # # Select example rows to display.
+        # predictions.select("prediction", "ArrDelay", "indexedFeatures").show(5)
+        #
+        # # Select (prediction, true label) and compute test error
+        # evaluator = RegressionEvaluator(
+        #     labelCol="ArrDelay", predictionCol="prediction", metricName="rmse")
+        #
+        # rmse = evaluator.evaluate(predictions)
+        # print("Root Mean Squared Error (RMSE) on test data = %g" % rmse)
+        #
+        # rfModel = model.stages[1]
+        # print(rfModel)  # summary only
 
-        # Train model.  This also runs the indexer.
-        model = pipeline.fit(trainingData)
+        # Cross Validation
+        # We now treat the Pipeline as an Estimator, wrapping it in a CrossValidator instance.
+        # This will allow us to jointly choose parameters for all Pipeline stages.
+        # A CrossValidator requires an Estimator, a set of Estimator ParamMaps, and an Evaluator.
+        # We use a ParamGridBuilder to construct a grid of parameters to search over.
+        # With 3 values for hashingTF.numFeatures and 2 values for lr.regParam,
+        # this grid will have 3 x 2 = 6 parameter settings for CrossValidator to choose from.
+        paramGrid = ParamGridBuilder()\
+            .addGrid(RandomForestRegressor(featuresCol="indexedFeatures", labelCol="ArrDelay").maxDepth, [3, 10, 20]) \
+            .addGrid(RandomForestRegressor(featuresCol="indexedFeatures", labelCol="ArrDelay").maxBins, [20, 25]) \
+            .build()
 
-        # Make predictions.
-        predictions = model.transform(testData)
+        crossval = CrossValidator(estimator=pipeline,
+                                  estimatorParamMaps=paramGrid,
+                                  evaluator=RegressionEvaluator(labelCol="ArrDelay"),
+                                  numFolds=3)
 
-        # Select example rows to display.
-        predictions.select("prediction", "label", "features").show(5)
+        # Run cross-validation, and choose the best set of parameters.
+        cvModel = crossval.fit(trainingData)
 
-        # Select (prediction, true label) and compute test error
-        evaluator = RegressionEvaluator(
-            labelCol="label", predictionCol="prediction", metricName="rmse")
-        rmse = evaluator.evaluate(predictions)
-        print("Root Mean Squared Error (RMSE) on test data = %g" % rmse)
-
-        rfModel = model.stages[1]
-        print(rfModel)  # summary only
-
-
+        # Make predictions on test documents. cvModel uses the best model found (lrModel).
+        prediction = cvModel.transform(testData)
+        selected = prediction.select("prediction", "ArrDelay", "indexedFeatures")
+        for row in selected.collect():
+            print(row)
 

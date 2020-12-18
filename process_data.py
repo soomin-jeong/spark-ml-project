@@ -55,6 +55,9 @@ class DataProcessor(object):
 
         return dataset
 
+    def drop_null_values(self, dataset):
+        return dataset.dropna()
+
     def run_all_data_processing(self, dataset):
         print("[PROCESSING]: Original Schema is")
         dataset.printSchema()
@@ -64,7 +67,8 @@ class DataProcessor(object):
                          self.drop_duplicated_data,
                          self.remove_null_arr_delay,
                          self.split_timestring,
-                         self.convert_datatypes]
+                         self.convert_datatypes,
+                         self.drop_null_values]
 
         for each in process_funcs:
             dataset = each(dataset)

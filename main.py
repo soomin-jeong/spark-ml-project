@@ -31,7 +31,7 @@ class ArrivalDelayMachineLearningRunner(object):
         self.dt.decision_tree(processed_data)
 
         # random forest
-        # dt.random_forest()
+        self.dt.random_forest(processed_data)
         return
 
     def predict(self, processed_data):
