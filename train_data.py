@@ -93,6 +93,8 @@ class DataTrainer(object):
     def decision_tree(self, data):
         # TODO: Explain why we dropped UniqueCarrier on the report
         data = data.drop("UniqueCarrier")
+        self.dp.nominal_category_vars.remove("UniqueCarrier")
+
         regressor = DecisionTreeRegressor(featuresCol='features', labelCol=TARGET_VARIABLE, impurity='variance')
         model_path = "decision_tree" + "3"
 
@@ -102,7 +104,9 @@ class DataTrainer(object):
 
     def random_forest(self, data):
         # TODO: Explain why we dropped UniqueCarrier on the report
-        data.drop("UniqueCarrier")
+        data = data.drop("UniqueCarrier")
+        self.dp.nominal_category_vars.remove("UniqueCarrier")
+
         regressor = RandomForestRegressor(featuresCol='features', labelCol=TARGET_VARIABLE)
         model_path = "random_forest" + "3"
         

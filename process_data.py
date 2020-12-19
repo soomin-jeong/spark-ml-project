@@ -2,12 +2,9 @@
 import functools
 
 from pyspark.ml.feature import StringIndexer, OneHotEncoder, VectorAssembler
-from pyspark.sql import SparkSession
 from pyspark.sql.types import IntegerType
 from pyspark.sql.functions import count, col, isnull, when, isnan
 
-
-spark = SparkSession.builder.appName('Delay Classifier').master('local[*]').getOrCreate()
 
 FORBIDDEN_VARS = ["ArrTime", "ActualElapsedTime", "AirTime", "TaxiIn", "Diverted", "CarrierDelay", "WeatherDelay",
                   "NASDelay", "SecurityDelay", "LateAircraftDelay"]
@@ -102,6 +99,8 @@ class DataProcessor(object):
             dataset = each(dataset)
 
         self.update_post_proessing_vars(dataset.schema.names)
+        print("[PROCESS] Finished processing the raw dataset")
+
         return dataset
 
     def string_indexer(self, input_cols):

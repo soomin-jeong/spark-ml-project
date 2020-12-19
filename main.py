@@ -18,7 +18,7 @@ ALGORITHM_OPTIONS = [LINEAR_REGRESSION, DECISION_TREE, RANDOM_FOREST]
 class MachineLearningRunner(object):
 
     def __init__(self, algorithm):
-        self.spark = SparkSession.builder.appName('Delay Classifier').master('local[*]').getOrCreate()
+        self.spark = SparkSession.builder.appName('Delay Classifier').config("spark.driver.memory", "15g").master('local[*]').getOrCreate()
         self.dl = DataLoader(self.spark)
         self.dp = DataProcessor(self.spark)
         self.dt = DataTrainer(self.spark, self.dp)
@@ -96,7 +96,7 @@ if __name__ == '__main__':
     while not correct_syntax:
         data_filepath_input = input("Enter the filepath of a CSV dataset (by default, input_dataset/dataset.csv): ")
         algorithm_input = input("Enter the machine learning algorithm (1: Linear Regression, 2:Decision Tree, 3:Random Forest, "
-                          "by default linear Regression): ")
+                          "by default Linear Regression): ")
 
         if data_filepath_input:
             data_filepath = data_filepath_input
