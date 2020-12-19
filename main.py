@@ -1,5 +1,5 @@
-import sys
 import os
+
 from pyspark.sql import SparkSession
 
 from load_data import DataLoader
@@ -42,7 +42,6 @@ class MachineLearningRunner(object):
         if self.algorithm == LINEAR_REGRESSION:
             self.dpr.predict_lr(processed_data, saved_model)
         elif self.algorithm == DECISION_TREE:
-            print("DECISON...")
             self.dpr.predict_dt(processed_data, saved_model)
         self.dpr.predict_rf(processed_data, saved_model)
 

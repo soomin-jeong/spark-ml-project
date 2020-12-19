@@ -5,8 +5,8 @@ from pyspark.ml.regression import RandomForestRegressor, DecisionTreeRegressor
 from pyspark.ml.evaluation import RegressionEvaluator
 
 from pyspark.ml import Pipeline
-from pyspark.ml.feature import StringIndexer, OneHotEncoder, VectorAssembler, VectorIndexer
-from pyspark.ml.tuning import CrossValidator, ParamGridBuilder
+from pyspark.ml.tuning import CrossValidator
+from pyspark.ml.tuning import CrossValidatorModel, ParamGridBuilder
 
 MAX_DEPTH_OPTIONS = [3, 10, 15]
 MAX_BINS_OPTIONS = [10, 15]
@@ -21,16 +21,21 @@ class DataTrainer(object):
     def get_training_and_test_data(self, data):
         return data.randomSplit([0.75, 0.25], seed=123)
 
-    def build_pipeline(self, ordial_categories, nominal_categories, numerical_vars, reg):
-        s_indexer, s_output_cols = self.dp.string_indexer(ordial_categories)
-        h_encoder, h_output_cols = self.dp.one_hot_encoder(nominal_categories)
-        assembler_inputs = numerical_vars + s_output_cols + h_output_cols
+    def build_pipeline(self, ordinal_categories, nominal_categories, numerical_vars, reg):
 
-        # Feature selection: returns an aseembler with "features"
+        # String index on ordinal categories
+        s_indexer, s_output_cols = self.dp.string_indexer(ordinal_categories)
+
+        # One hot-encoded indexer on nominal categories (Preproecssing with String indexer)
+        s_indexer_nom, s_output_cols_nom = self.dp.string_indexer(nominal_categories)
+        h_encoder, h_output_cols = self.dp.one_hot_encoder(s_output_cols_nom)
+
+        # Assemble all the columns into one vector called 'feature'
+        assembler_inputs = numerical_vars + s_output_cols + h_output_cols
         assembler = self.dp.vector_assembler(assembler_inputs)
 
         # Construct a pipeline of preprocessing, feature engineering, selection and regressor
-        pipeline = Pipeline(stages=[s_indexer, h_encoder, assembler, reg])
+        pipeline = Pipeline(stages=[s_indexer, s_indexer_nom, h_encoder, assembler, reg])
         return pipeline
 
     def linear_regression(self, data):
@@ -39,10 +44,7 @@ class DataTrainer(object):
         # TODO : [TOM] Linear Regression Model Path
         return "dummy model path"
 
-    def abstract_decision_tree(self, data, regressor, model_path):
-
-        # Split data
-        train_data, test_data = self.get_training_and_test_data(data)
+    def abstract_decision_tree(self, train_data, regressor, model_path):
         params = ParamGridBuilder().addGrid(regressor.maxDepth, MAX_DEPTH_OPTIONS) \
                 .addGrid(regressor.maxBins, MAX_BINS_OPTIONS) \
                 .build()
@@ -66,16 +68,39 @@ class DataTrainer(object):
 
         # Evaluation of the best model according to evaluator
         print("RMSE training: " + str(rmse.evaluate(cv_model.bestModel.transform(train_data))))
-        print('RMSE test: ' + str(rmse.evaluate(cv_model.bestModel.transform(test_data))))
         return model_path
 
+    def cross_validate(self, test_data, regressor, saved_model):
+        cvModel = CrossValidatorModel.load(saved_model)
+
+        paramGrid = ParamGridBuilder().addGrid(regressor.maxDepth, MAX_DEPTH_OPTIONS) \
+            .addGrid(regressor.maxBins, MAX_BINS_OPTIONS) \
+            .build()
+
+        # Evaluation of the best model according to evaluator
+        for perf, params in zip(cvModel.avgMetrics, paramGrid):
+            for param in params:
+                print(param.name, params[param], end=' ')
+            print(' achieved a performance of ', perf, 'RMSE')
+
+        rmse = RegressionEvaluator(labelCol='ArrDelay')
+        print('Performance Best Model')
+        print("RMSE training: " + str(min(cvModel.avgMetrics)))
+        print('RMSE test: ' + str(rmse.evaluate(cvModel.bestModel.transform(test_data))))
+        self.spark.stop()
+
     def decision_tree(self, data):
+        train_data, test_data = self.get_training_and_test_data(data)
         regressor = DecisionTreeRegressor(featuresCol='features', labelCol='ArrDelay', impurity='variance')
         model_path = "decision_tree" + "3"
-        self.abstract_decision_tree(data, regressor, model_path)
+        self.abstract_decision_tree(train_data, regressor, model_path)
+        self.cross_validate(test_data, regressor, model_path)
+
 
     def random_forest(self, data):
+        train_data, test_data = self.get_training_and_test_data(data)
         regressor = RandomForestRegressor(featuresCol='features', labelCol='ArrDelay')
         model_path = "random_forest" + "3"
-        self.abstract_decision_tree(data, regressor, model_path)
+        self.abstract_decision_tree(train_data, regressor, model_path)
+        self.cross_validate(test_data, regressor, model_path)
 
