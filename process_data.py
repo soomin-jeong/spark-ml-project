@@ -12,19 +12,21 @@ spark = SparkSession.builder.appName('Delay Classifier').master('local[*]').getO
 FORBIDDEN_VARS = ["ArrTime", "ActualElapsedTime", "AirTime", "TaxiIn", "Diverted", "CarrierDelay", "WeatherDelay",
                   "NASDelay", "SecurityDelay", "LateAircraftDelay"]
 
-EXCLUDED_VARS = ["Year", "Origin", "Dest", "CancellationCode", "FlightNum", "TailNum"]
+# TODO: UniqueCarrier Makes an error on DT, to test remove "UniqueCarrier" from the list below.
+EXCLUDED_VARS = ["Year", "Origin", "Dest", "CancellationCode", "FlightNum", "TailNum", "UniqueCarrier"]
 
 
 class DataProcessor(object):
     def __init__(self, spark):
         self.spark = spark
 
+        # TODO: Are the variables analyzed correctly? Exceptions: DayofMonth, Month
         self.nominal_category_vars = ["UniqueCarrier", "FlightNum", "TailNum", "Cancelled"]
         self.ordinal_category_vars = ["Year", "DayOfWeek"]
         self.numerical_vars = ["CRSElapsedTime", "ArrDelay", "DepDelay", "Distance", "TaxiOut", "DayofMonth", "Month"]
-        self.string_vars = ["DepTime", "CRSDepTime", "CRSArrTime", "Origin", "Dest", "CancellationCode"]
-        # [NOTE] DayofMonth, Month : though they are ordial category, since there are too many categories (up to 12 and 31),
-        # we regard them as numerical vars
+        self.string_vars = ["DepTime", "CRSDepTime", "ArrTime", "CRSArrTime", "Origin", "Dest", "CancellationCode"]
+        # DayofMonth, Month : though they are ordinal category, since there are too many categories (up to 12 and 31),
+        #              we moved it to numerical vars
 
     def remove_from_list(self, list_to_check, list_to_survive):
         to_remove = []
@@ -34,7 +36,7 @@ class DataProcessor(object):
         for each in to_remove:
             list_to_check.remove(each)
 
-    def update_post_proessing_vars(self, post_process_vars):
+    def update_post_processing_vars(self, post_process_vars):
         for each_var_list in [self.nominal_category_vars, self.ordinal_category_vars, self.numerical_vars, self.string_vars]:
             self.remove_from_list(each_var_list, post_process_vars)
 
@@ -52,7 +54,6 @@ class DataProcessor(object):
         no_cancelled_flights = no_cancelled_flights.drop('Cancelled')
         return no_cancelled_flights
 
-    #  Split the timestring(hhmm) into hour and minute and add them to the dataset
     def split_timestring(self, dataset):
         dataset = dataset\
             .withColumn('DepHour', col('DepTime') / 100) \
@@ -62,10 +63,9 @@ class DataProcessor(object):
             .withColumn('CRSArrHour', col('CRSArrTime') / 100) \
             .withColumn('CRSArrMinute', col('CRSArrTime') % 100)
 
-        # Adding the newly added numerical variables into the list of numerical vars
         self.numerical_vars = self.numerical_vars + ['DepHour', 'DepMinute', 'CRSDepHour', 'CRSDepMinute',
                                                      'CRSArrHour', 'CRSArrMinute']
-        # Removing the unnecessary timestring(HHmm) fields
+
         dataset = dataset.drop('DepTime', 'CRSDepTime', 'CRSArrTime')
         return dataset
 
@@ -78,23 +78,34 @@ class DataProcessor(object):
 
         return dataset
 
+    def impute_taxiOut(self, dataset):
+        return dataset.na.fill({'TaxiOut': 0})
+
     def drop_null_values(self, dataset):
-        # TODO: think about the case like TaxiOut in 1997.csv
         return dataset.dropna()
 
     def run_all_data_processing(self, dataset):
+        print("[PROCESSING]: Original Schema")
+        dataset.printSchema()
+        print("================================")
+
         process_funcs = [self.drop_forbidden_and_excluded_variables,
                          self.remove_cancelled_flights,
                          self.drop_duplicated_data,
                          self.remove_null_arr_delay,
                          self.split_timestring,
                          self.convert_datatypes,
+                         self.impute_taxiOut,
                          self.drop_null_values]
 
         for each in process_funcs:
             dataset = each(dataset)
 
-        self.update_post_proessing_vars(dataset.schema.names)
+        print("[PROCESSING]: New Schema")
+        dataset.printSchema()
+        print("================================")
+
+        self.update_post_processing_vars(dataset.schema.names)
         return dataset
 
     def string_indexer(self, input_cols):

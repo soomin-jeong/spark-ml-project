@@ -1,5 +1,5 @@
+import sys
 import os
-
 from pyspark.sql import SparkSession
 
 from load_data import DataLoader
@@ -42,6 +42,7 @@ class MachineLearningRunner(object):
         if self.algorithm == LINEAR_REGRESSION:
             self.dpr.predict_lr(processed_data, saved_model)
         elif self.algorithm == DECISION_TREE:
+            print("DECISON...")
             self.dpr.predict_dt(processed_data, saved_model)
         self.dpr.predict_rf(processed_data, saved_model)
 
@@ -59,9 +60,11 @@ class Launcher(object):
 
         # CASE 1: File does not exist
         try:
-            os.path.isfile(filepath)
+            f = open(filepath)
         except IOError:
             return False, "No such file"
+        else:
+            f.close()
 
         # CASE 2: Not in format of csv
         if not filepath.lower().endswith('csv'):
