@@ -3,7 +3,10 @@ from pyspark.ml.regression import DecisionTreeRegressor
 from pyspark.ml.tuning import CrossValidatorModel, ParamGridBuilder
 from train_data import MAX_DEPTH_OPTIONS, MAX_BINS_OPTIONS
 
+
 class DataPredictor(object):
+
+    # TODO : Are we going to use the predictor?
     def __init__(self, spark):
         self.spark = spark
 

@@ -19,7 +19,7 @@ class DataTrainer(object):
         self.dp = dp
 
     def get_training_and_test_data(self, data):
-        return data.randomSplit([0.7, 0.3], seed=123)
+        return data.randomSplit([0.75, 0.25], seed=123)
 
     def build_pipeline(self, ordial_categories, nominal_categories, numerical_vars, reg):
         s_indexer, s_output_cols = self.dp.string_indexer(ordial_categories)
