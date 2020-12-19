@@ -12,7 +12,7 @@ spark = SparkSession.builder.appName('Delay Classifier').master('local[*]').getO
 FORBIDDEN_VARS = ["ArrTime", "ActualElapsedTime", "AirTime", "TaxiIn", "Diverted", "CarrierDelay", "WeatherDelay",
                   "NASDelay", "SecurityDelay", "LateAircraftDelay"]
 
-EXCLUDED_VARS = ["Year", "Origin", "Dest", "CancellationCode", "FlightNum", "TailNum"]
+EXCLUDED_VARS = ["Year", "Origin", "Dest", "FlightNum", "TailNum"]
 
 
 class DataProcessor(object):
