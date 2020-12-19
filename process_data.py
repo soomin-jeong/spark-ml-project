@@ -2,31 +2,26 @@
 import functools
 
 from pyspark.ml.feature import StringIndexer, OneHotEncoder, VectorAssembler
-from pyspark.sql import SparkSession
 from pyspark.sql.types import IntegerType
-from pyspark.sql.functions import col
+from pyspark.sql.functions import count, col, isnull, when, isnan
 
-
-spark = SparkSession.builder.appName('Delay Classifier').master('local[*]').getOrCreate()
 
 FORBIDDEN_VARS = ["ArrTime", "ActualElapsedTime", "AirTime", "TaxiIn", "Diverted", "CarrierDelay", "WeatherDelay",
                   "NASDelay", "SecurityDelay", "LateAircraftDelay"]
 
-# TODO: UniqueCarrier Makes an error on DT, to test remove "UniqueCarrier" from the list below.
-EXCLUDED_VARS = ["Year", "Origin", "Dest", "CancellationCode", "FlightNum", "TailNum", "UniqueCarrier"]
+EXCLUDED_VARS = ["Year", "Origin", "Dest", "FlightNum", "TailNum"]
 
 
 class DataProcessor(object):
     def __init__(self, spark):
         self.spark = spark
 
-        # TODO: Are the variables analyzed correctly? Exceptions: DayofMonth, Month
         self.nominal_category_vars = ["UniqueCarrier", "FlightNum", "TailNum", "Cancelled"]
         self.ordinal_category_vars = ["Year", "DayOfWeek"]
         self.numerical_vars = ["CRSElapsedTime", "ArrDelay", "DepDelay", "Distance", "TaxiOut", "DayofMonth", "Month"]
-        self.string_vars = ["DepTime", "CRSDepTime", "ArrTime", "CRSArrTime", "Origin", "Dest", "CancellationCode"]
-        # DayofMonth, Month : though they are ordial category, since there are too many categories (up to 12 and 31),
-        #              we moved it to numerical vars
+        self.string_vars = ["DepTime", "CRSDepTime", "CRSArrTime", "Origin", "Dest", "CancellationCode"]
+        # [NOTE] DayofMonth, Month : though they are ordial category, since there are too many categories (up to 12 and 31),
+        # we regard them as numerical vars
 
     def remove_from_list(self, list_to_check, list_to_survive):
         to_remove = []
@@ -54,6 +49,7 @@ class DataProcessor(object):
         no_cancelled_flights = no_cancelled_flights.drop('Cancelled')
         return no_cancelled_flights
 
+    #  Split the timestring(hhmm) into hour and minute and add them to the dataset
     def split_timestring(self, dataset):
         dataset = dataset\
             .withColumn('DepHour', col('DepTime') / 100) \
@@ -63,9 +59,10 @@ class DataProcessor(object):
             .withColumn('CRSArrHour', col('CRSArrTime') / 100) \
             .withColumn('CRSArrMinute', col('CRSArrTime') % 100)
 
+        # Adding the newly added numerical variables into the list of numerical vars
         self.numerical_vars = self.numerical_vars + ['DepHour', 'DepMinute', 'CRSDepHour', 'CRSDepMinute',
                                                      'CRSArrHour', 'CRSArrMinute']
-
+        # Removing the unnecessary timestring(HHmm) fields
         dataset = dataset.drop('DepTime', 'CRSDepTime', 'CRSArrTime')
         return dataset
 
@@ -81,27 +78,29 @@ class DataProcessor(object):
     def drop_null_values(self, dataset):
         return dataset.dropna()
 
+    def drop_too_many_null_values(self, dataset):
+        threshold = 0.8 * dataset.count()
+        null_counts = dataset.select([count(when(col(c).isNull(), c)).alias(c) for c in dataset.columns]).collect()[
+            0].asDict()
+        to_drop = [k for k, v in null_counts.items() if v > threshold]
+        return dataset.drop(*to_drop)
+
     def run_all_data_processing(self, dataset):
-        print("[PROCESSING]: Original Schema")
-        dataset.printSchema()
-        print("================================")
+        process_func = [self.drop_forbidden_and_excluded_variables,
+                        self.remove_cancelled_flights,
+                        self.drop_duplicated_data,
+                        self.remove_null_arr_delay,
+                        self.split_timestring,
+                        self.convert_datatypes,
+                        self.drop_too_many_null_values,
+                        self.drop_null_values]
 
-        process_funcs = [self.drop_forbidden_and_excluded_variables,
-                         self.remove_cancelled_flights,
-                         self.drop_duplicated_data,
-                         self.remove_null_arr_delay,
-                         self.split_timestring,
-                         self.convert_datatypes,
-                         self.drop_null_values]
-
-        for each in process_funcs:
+        for each in process_func:
             dataset = each(dataset)
 
-        print("[PROCESSING]: New Schema")
-        dataset.printSchema()
-        print("================================")
-
         self.update_post_proessing_vars(dataset.schema.names)
+        print("[PROCESS] Finished processing the raw dataset")
+
         return dataset
 
     def string_indexer(self, input_cols):
