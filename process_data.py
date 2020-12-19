@@ -4,7 +4,7 @@ import functools
 from pyspark.ml.feature import StringIndexer, OneHotEncoder, VectorAssembler
 from pyspark.sql import SparkSession
 from pyspark.sql.types import IntegerType
-from pyspark.sql.functions import col
+from pyspark.sql.functions import count, col, isnull, when, isnan
 
 
 spark = SparkSession.builder.appName('Delay Classifier').master('local[*]').getOrCreate()
@@ -79,19 +79,26 @@ class DataProcessor(object):
         return dataset
 
     def drop_null_values(self, dataset):
-        # TODO: think about the case like TaxiOut in 1997.csv
         return dataset.dropna()
 
-    def run_all_data_processing(self, dataset):
-        process_funcs = [self.drop_forbidden_and_excluded_variables,
-                         self.remove_cancelled_flights,
-                         self.drop_duplicated_data,
-                         self.remove_null_arr_delay,
-                         self.split_timestring,
-                         self.convert_datatypes,
-                         self.drop_null_values]
+    def drop_too_many_null_values(self, dataset):
+        threshold = 0.8 * dataset.count()
+        null_counts = dataset.select([count(when(col(c).isNull(), c)).alias(c) for c in dataset.columns]).collect()[
+            0].asDict()
+        to_drop = [k for k, v in null_counts.items() if v > threshold]
+        return dataset.drop(*to_drop)
 
-        for each in process_funcs:
+    def run_all_data_processing(self, dataset):
+        process_func = [self.drop_forbidden_and_excluded_variables,
+                        self.remove_cancelled_flights,
+                        self.drop_duplicated_data,
+                        self.remove_null_arr_delay,
+                        self.split_timestring,
+                        self.convert_datatypes,
+                        self.drop_too_many_null_values,
+                        self.drop_null_values]
+
+        for each in process_func:
             dataset = each(dataset)
 
         self.update_post_proessing_vars(dataset.schema.names)

@@ -10,6 +10,7 @@ from pyspark.ml.tuning import CrossValidatorModel, ParamGridBuilder
 
 MAX_DEPTH_OPTIONS = [3, 10, 15]
 MAX_BINS_OPTIONS = [10, 15]
+TARGET_VARIABLE = 'ArrDelay'
 
 
 class DataTrainer(object):
@@ -54,7 +55,7 @@ class DataTrainer(object):
                                        self.dp.numerical_vars, regressor)
 
         # Error measure:
-        rmse = RegressionEvaluator(labelCol='ArrDelay')
+        rmse = RegressionEvaluator(labelCol=TARGET_VARIABLE)
 
         # Start the actual modelling:
         print("[TRAINING] Starting model Fitting")
@@ -83,23 +84,29 @@ class DataTrainer(object):
                 print(param.name, params[param], end=' ')
             print(' achieved a performance of ', perf, 'RMSE')
 
-        rmse = RegressionEvaluator(labelCol='ArrDelay')
+        rmse = RegressionEvaluator(labelCol=TARGET_VARIABLE)
         print('Performance Best Model')
         print("RMSE training: " + str(min(cvModel.avgMetrics)))
         print('RMSE test: ' + str(rmse.evaluate(cvModel.bestModel.transform(test_data))))
         self.spark.stop()
 
     def decision_tree(self, data):
-        train_data, test_data = self.get_training_and_test_data(data)
-        regressor = DecisionTreeRegressor(featuresCol='features', labelCol='ArrDelay', impurity='variance')
+        # TODO: Explain why we dropped UniqueCarrier on the report
+        data = data.drop("UniqueCarrier")
+        regressor = DecisionTreeRegressor(featuresCol='features', labelCol=TARGET_VARIABLE, impurity='variance')
         model_path = "decision_tree" + "3"
+
+        train_data, test_data = self.get_training_and_test_data(data)
         self.abstract_decision_tree(train_data, regressor, model_path)
         self.cross_validate(test_data, regressor, model_path)
 
     def random_forest(self, data):
-        train_data, test_data = self.get_training_and_test_data(data)
-        regressor = RandomForestRegressor(featuresCol='features', labelCol='ArrDelay')
+        # TODO: Explain why we dropped UniqueCarrier on the report
+        data.drop("UniqueCarrier")
+        regressor = RandomForestRegressor(featuresCol='features', labelCol=TARGET_VARIABLE)
         model_path = "random_forest" + "3"
+        
+        train_data, test_data = self.get_training_and_test_data(data)
         self.abstract_decision_tree(train_data, regressor, model_path)
         self.cross_validate(test_data, regressor, model_path)
 
