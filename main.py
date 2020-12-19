@@ -94,28 +94,28 @@ if __name__ == '__main__':
     # default values
     correct_syntax = False
     data_filepath = os.path.join(os.getcwd(), 'input_dataset', 'dataset.csv')
-    algorithm = LINEAR_REGRESSION
+    algorithm = DECISION_TREE
 
-    while not correct_syntax:
-        data_filepath_input = input("Enter the filepath of a CSV dataset (by default, input_dataset/dataset.csv): ")
-        algorithm_input = input("Enter the machine learning algorithm (1: Linear Regression, 2:Decision Tree, 3:Random Forest, "
-                          "by default linear Regression): ")
+    #while not correct_syntax:
+     #   data_filepath_input = input("Enter the filepath of a CSV dataset (by default, input_dataset/dataset.csv): ")
+      #  algorithm_input = input("Enter the machine learning algorithm (1: Linear Regression, 2:Decision Tree, 3:Random Forest, "
+      #                    "by default linear Regression): ")
 
-        if data_filepath_input:
-            data_filepath = data_filepath_input
-        if algorithm_input:
-            algorithm = int(algorithm_input)
+       # if data_filepath_input:
+        #    data_filepath = data_filepath_input
+        #if algorithm_input:
+        #    algorithm = int(algorithm_input)
 
-        right_file_path, f_error_msg = launcher.check_filepath(data_filepath)
-        if not right_file_path:
-            print(f_error_msg + ", Enter again...")
-            continue
+        #right_file_path, f_error_msg = launcher.check_filepath(data_filepath)
+        #if not right_file_path:
+        #    print(f_error_msg + ", Enter again...")
+        #    continue
 
-        algorithm_check, a_error_msg = launcher.check_algorithm(algorithm)
-        if not algorithm_check:
-            print(a_error_msg + ", Enter again...")
-            continue
-        correct_syntax = True
+        #algorithm_check, a_error_msg = launcher.check_algorithm(algorithm)
+        #if not algorithm_check:
+         #   print(a_error_msg + ", Enter again...")
+          #  continue
+        #correct_syntax = True
 
     ml_runner = MachineLearningRunner(algorithm)
     ml_runner.run(data_filepath)
