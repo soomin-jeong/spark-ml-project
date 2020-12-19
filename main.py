@@ -59,11 +59,9 @@ class Launcher(object):
 
         # CASE 1: File does not exist
         try:
-            f = open(filepath)
+            os.path.isfile(filepath)
         except IOError:
             return False, "No such file"
-        else:
-            f.close()
 
         # CASE 2: Not in format of csv
         if not filepath.lower().endswith('csv'):

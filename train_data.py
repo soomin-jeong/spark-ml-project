@@ -96,7 +96,6 @@ class DataTrainer(object):
         self.abstract_decision_tree(train_data, regressor, model_path)
         self.cross_validate(test_data, regressor, model_path)
 
-
     def random_forest(self, data):
         train_data, test_data = self.get_training_and_test_data(data)
         regressor = RandomForestRegressor(featuresCol='features', labelCol='ArrDelay')
