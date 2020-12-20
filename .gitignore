@@ -1,6 +1,5 @@
 input_dataset/*
-.idea/*
-
+.idea/**
 **/.ipynb_checkpoint/**
 __pycache__/*
 random_forest/**
