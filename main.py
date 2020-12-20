@@ -128,7 +128,7 @@ if __name__ == '__main__':
             if not memory_size_check:
                 print(m_error_msg + ", Enter again...")
                 continue
-            memory_size = memory_size_input
+            memory_size = memory_size_input + "g"
 
         correct_syntax = True
 
