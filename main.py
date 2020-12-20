@@ -106,7 +106,7 @@ if __name__ == '__main__':
             if not algorithm_check:
                 print(a_error_msg + ", Enter again...")
                 continue
-            algorithm = algorithm_input
+            algorithm = int(algorithm_input)
         correct_syntax = True
 
     ml_runner = MachineLearningRunner(algorithm)
