@@ -12,12 +12,10 @@ RANDOM_FOREST = 3
 
 ALGORITHM_OPTIONS = [LINEAR_REGRESSION, DECISION_TREE, RANDOM_FOREST]
 
-DEFAULT_SPARK_MEMORY_SIZE = "1g"
-
 
 class MachineLearningRunner(object):
-    def __init__(self, algorithm, memory_size=DEFAULT_SPARK_MEMORY_SIZE):
-        self.spark = SparkSession.builder.appName('Delay Classifier').config("spark.driver.memory", memory_size).master('local[*]').getOrCreate()
+    def __init__(self, algorithm):
+        self.spark = SparkSession.builder.appName('Delay Classifier').master('local[*]').getOrCreate()
         self.dl = DataLoader(self.spark)
         self.dp = DataProcessor(self.spark)
         self.dt = DataTrainer(self.spark, self.dp)
@@ -75,15 +73,6 @@ class Launcher(object):
             return False, "algorithm should be {}, {} or {}".format(*ALGORITHM_OPTIONS)
         return True, None
 
-    def check_memorysize(self, memory_size):
-        if not memory_size.isnumeric():
-            return False, "memory size should be a number"
-
-        if int(memory_size) < 1:
-            return False, "Recommended memory size is over 1 GB"
-
-        return True, None
-
 
 launcher = Launcher()
 
@@ -96,7 +85,6 @@ if __name__ == '__main__':
     correct_syntax = False
     data_filepath = os.path.join(os.getcwd(), 'input_dataset', 'dataset.csv')
     algorithm = LINEAR_REGRESSION
-    memory_size = DEFAULT_SPARK_MEMORY_SIZE
 
     while not correct_syntax:
         # filepath for raw dataset
@@ -119,20 +107,9 @@ if __name__ == '__main__':
                 print(a_error_msg + ", Enter again...")
                 continue
             algorithm = algorithm_input
-
-        # setting memory size for spark
-        memory_size_input = input("Enter the memory size for spark in GB (by default, 1): ")
-
-        if memory_size_input:
-            memory_size_check, m_error_msg = launcher.check_memorysize(memory_size_input)
-            if not memory_size_check:
-                print(m_error_msg + ", Enter again...")
-                continue
-            memory_size = memory_size_input + "g"
-
         correct_syntax = True
 
-    ml_runner = MachineLearningRunner(algorithm, memory_size)
+    ml_runner = MachineLearningRunner(algorithm)
     ml_runner.run(data_filepath)
 
 
