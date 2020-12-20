@@ -3,4 +3,6 @@ input_dataset/*
 
 **/.ipynb_checkpoint/**
 __pycache__/*
-random_forest3/*
+random_forest/**
+decision_tree/**
+linear_regression/**

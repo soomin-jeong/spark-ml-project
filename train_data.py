@@ -5,13 +5,14 @@ from pyspark.ml.regression import RandomForestRegressor, DecisionTreeRegressor, 
 from pyspark.ml.evaluation import RegressionEvaluator
 
 from pyspark.ml import Pipeline
-from pyspark.ml.feature import StringIndexer, OneHotEncoder, VectorAssembler, VectorIndexer
-from pyspark.ml.tuning import CrossValidator, ParamGridBuilder
+from pyspark.ml.tuning import CrossValidator, ParamGridBuilder, CrossValidatorModel
 
 MAX_DEPTH_OPTIONS = [3, 10, 15]
 MAX_BINS_OPTIONS = [10, 15]
 REG_PARAM_OPTIONS = [0, 0.5]
 ELASTICNET_PARAM_OPTIONS = [0, 0.5, 1]
+
+TARGET_VARIABLE = 'ArrDelay'
 
 
 class DataTrainer(object):
@@ -19,6 +20,7 @@ class DataTrainer(object):
     def __init__(self, spark, dp):
         self.spark = spark
         self.dp = dp
+        self.evaluator = RegressionEvaluator(labelCol=TARGET_VARIABLE)
 
     def get_training_and_test_data(self, data):
         return data.randomSplit([0.75, 0.25], seed=123)
@@ -35,82 +37,95 @@ class DataTrainer(object):
         pipeline = Pipeline(stages=[s_indexer, h_encoder, assembler, reg])
         return pipeline
 
-    def evaluate_results(self, evaluator, model, train_data, test_data):
-        print("RMSE training: " + str(evaluator.evaluate(model.bestModel.transform(train_data))))
-        print('RMSE test: ' + str(evaluator.evaluate(model.bestModel.transform(test_data))))
+    def learn_from_training_data(self, train_data, regressor, model_path, param_grid):
+        # Construct a pipeline of preprocessing, feature engineering, selection and regressor
+        pipeline = self.build_pipeline(self.dp.ordinal_category_vars, self.dp.nominal_category_vars,
+                                       self.dp.numerical_vars, regressor)
+
+        # Start the actual modelling:
+        print("[TRAINING] Starting model Fitting")
+        start = time.time()
+        cv = CrossValidator(estimator=pipeline, estimatorParamMaps=param_grid, evaluator=self.evaluator, numFolds=3)
+        cv_model = cv.fit(train_data)
+
+        print("Time taken to develop model: " + str(time.time() - start) + 's.')
+
+        # Save the model
+        cv_model.write().overwrite().save(model_path)
+        print("RMSE training: " + str(self.evaluator.evaluate(cv_model.bestModel.transform(train_data))))
+
+    def drop_unique_carrier_due_to_memory_overload(self, data):
+        data = data.drop("UniqueCarrier")
+        self.dp.nominal_category_vars.remove("UniqueCarrier")
+        return data
+
+    def cross_validate(self, test_data, saved_model, param_grid):
+        cvModel = CrossValidatorModel.load(saved_model)
+
+        # Evaluation of the best model according to evaluator
+        for perf, params in zip(cvModel.avgMetrics, param_grid):
+            for param in params:
+                print(param.name, params[param], end=' ')
+            print(' achieved a performance of ', perf, 'RMSE')
+
+        print('Performance Best Model')
+        print("RMSE training: " + str(min(cvModel.avgMetrics)))
+        print('RMSE test: ' + str(self.evaluator.evaluate(cvModel.bestModel.transform(test_data))))
+        self.spark.stop()
 
     def linear_regression(self, data):
-        print("[TRAIN] Linear Regression: printing the evaluation results...")
 
-        # [TOM] Linear Regression Model Path
+        regressor = LinearRegression(featuresCol='features', labelCol='ArrDelay')
         model_path = 'linear_regression'
 
-        # Regressor
-        regressor = LinearRegression(featuresCol='features', labelCol='ArrDelay')
-
-        train_data, test_data = self.get_training_and_test_data(data)
-        params = ParamGridBuilder().addGrid(regressor.regParam, REG_PARAM_OPTIONS) \
+        param_grid = ParamGridBuilder().addGrid(regressor.regParam, REG_PARAM_OPTIONS) \
             .addGrid(regressor.elasticNetParam, ELASTICNET_PARAM_OPTIONS) \
             .build()
 
-        # Construct a pipeline of preprocessing, feature engineering, selection and regressor
-        pipeline = self.build_pipeline(self.dp.ordinal_category_vars, self.dp.nominal_category_vars,
-                                       self.dp.numerical_vars, regressor)
-
-        # Error measure:
-        rmse = RegressionEvaluator(labelCol='ArrDelay')
-
-        # Start the actual modelling:
-        print("[TRAINING] Starting model Fitting")
-        start = time.time()
-        cv = CrossValidator(estimator=pipeline, estimatorParamMaps=params, evaluator=rmse, numFolds=3)
-        cv_model = cv.fit(train_data)
-
-        print("[TRAINING] Time taken to develop model: " + str(time.time() - start) + 's.')
-        # Save the model
-        cv_model.write().overwrite().save(model_path)
-
-        # Evaluation of the best model according to evaluator
-        self.evaluate_results(rmse, cv_model, train_data, test_data)
-
-        return model_path
-
-    def abstract_decision_tree(self, data, regressor, model_path):
-
-        # Split data
         train_data, test_data = self.get_training_and_test_data(data)
-        params = ParamGridBuilder().addGrid(regressor.maxDepth, MAX_DEPTH_OPTIONS) \
-                .addGrid(regressor.maxBins, MAX_BINS_OPTIONS) \
-                .build()
 
-        # Construct a pipeline of preprocessing, feature engineering, selection and regressor
-        pipeline = self.build_pipeline(self.dp.ordinal_category_vars, self.dp.nominal_category_vars,
-                                       self.dp.numerical_vars, regressor)
+        # learning on training data
+        self.learn_from_training_data(train_data, regressor, model_path, param_grid)
 
-        # Error measure:
-        rmse = RegressionEvaluator(labelCol='ArrDelay')
-
-        # Start the actual modelling:
-        print("[TRAINING] Starting model Fitting")
-        start = time.time()
-        cv = CrossValidator(estimator=pipeline, estimatorParamMaps=params, evaluator=rmse, numFolds=3)
-        cv_model = cv.fit(train_data)
-
-        print("[TRAINING] Time taken to develop model: " + str(time.time() - start) + 's.')
-        # Save the model
-        cv_model.write().overwrite().save(model_path)
-
-        # Evaluation of the best model according to evaluator
-        self.evaluate_results(rmse, cv_model, train_data, test_data)
-        return model_path
+        # evavluate on test data
+        self.cross_validate(test_data, model_path, param_grid)
 
     def decision_tree(self, data):
-        regressor = DecisionTreeRegressor(featuresCol='features', labelCol='ArrDelay', impurity='variance')
+        # TODO: Explain why we dropped UniqueCarrier on the report
+        data = self.drop_unique_carrier_due_to_memory_overload(data)
+
+        regressor = DecisionTreeRegressor(featuresCol='features', labelCol=TARGET_VARIABLE, impurity='variance')
         model_path = "decision_tree"
-        self.abstract_decision_tree(data, regressor, model_path)
+
+        param_grid = ParamGridBuilder().addGrid(regressor.maxDepth, MAX_DEPTH_OPTIONS) \
+            .addGrid(regressor.maxBins, MAX_BINS_OPTIONS) \
+            .build()
+
+        train_data, test_data = self.get_training_and_test_data(data)
+
+        # learning on training data
+        self.learn_from_training_data(train_data, regressor, model_path, param_grid)
+
+        # evavluate on test data
+        self.cross_validate(test_data, model_path, param_grid)
 
     def random_forest(self, data):
-        regressor = RandomForestRegressor(featuresCol='features', labelCol='ArrDelay')
+        # TODO: Explain why we dropped UniqueCarrier on the report
+        data = self.drop_unique_carrier_due_to_memory_overload(data)
+
+        regressor = RandomForestRegressor(featuresCol='features', labelCol=TARGET_VARIABLE)
         model_path = "random_forest"
-        self.abstract_decision_tree(data, regressor, model_path)
+
+        param_grid = ParamGridBuilder().addGrid(regressor.maxDepth, MAX_DEPTH_OPTIONS) \
+            .addGrid(regressor.maxBins, MAX_BINS_OPTIONS) \
+            .build()
+
+        train_data, test_data = self.get_training_and_test_data(data)
+
+        # learning on training data
+        self.learn_from_training_data(train_data, regressor, model_path, param_grid)
+
+        # evavluate on test data
+        self.cross_validate(test_data, model_path, param_grid)
+
 
