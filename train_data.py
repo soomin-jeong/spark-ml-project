@@ -93,6 +93,7 @@ class DataTrainer(object):
 
         # evavluate on test data
         self.cross_validate(test_data, model_path, param_grid)
+        return model_path
 
     def decision_tree(self, data):
         # TODO: Explain why we dropped UniqueCarrier on the report
@@ -112,6 +113,7 @@ class DataTrainer(object):
 
         # evavluate on test data
         self.cross_validate(test_data, model_path, param_grid)
+        return model_path
 
     def random_forest(self, data):
         # TODO: Explain why we dropped UniqueCarrier on the report
@@ -131,5 +133,6 @@ class DataTrainer(object):
 
         # evavluate on test data
         self.cross_validate(test_data, model_path, param_grid)
+        return model_path
 
 
