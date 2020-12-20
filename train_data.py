@@ -26,15 +26,19 @@ class DataTrainer(object):
         return data.randomSplit([0.75, 0.25], seed=123)
 
     def build_pipeline(self, ordinal_categories, nominal_categories, numerical_vars, reg):
+        # String index on ordinal categories
         s_indexer, s_output_cols = self.dp.string_indexer(ordinal_categories)
-        h_encoder, h_output_cols = self.dp.one_hot_encoder(nominal_categories)
-        assembler_inputs = numerical_vars + s_output_cols + h_output_cols
 
-        # Feature selection: returns an aseembler with "features"
+        # One hot-encoded indexer on nominal categories (Preproecssing with String indexer)
+        s_indexer_nom, s_output_cols_nom = self.dp.string_indexer(nominal_categories)
+        h_encoder, h_output_cols = self.dp.one_hot_encoder(s_output_cols_nom)
+
+        # Assemble all the columns into one vector called 'feature'
+        assembler_inputs = numerical_vars + s_output_cols + h_output_cols
         assembler = self.dp.vector_assembler(assembler_inputs)
 
         # Construct a pipeline of preprocessing, feature engineering, selection and regressor
-        pipeline = Pipeline(stages=[s_indexer, h_encoder, assembler, reg])
+        pipeline = Pipeline(stages=[s_indexer, s_indexer_nom, h_encoder, assembler, reg])
         return pipeline
 
     def learn_from_training_data(self, train_data, regressor, model_path, param_grid):
