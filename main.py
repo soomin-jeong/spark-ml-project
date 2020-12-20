@@ -1,11 +1,9 @@
-import sys
 import os
 from pyspark.sql import SparkSession
 
 from load_data import DataLoader
 from process_data import DataProcessor
 from train_data import DataTrainer
-from predict_data import DataPredictor
 
 
 LINEAR_REGRESSION = 1
@@ -16,13 +14,13 @@ ALGORITHM_OPTIONS = [LINEAR_REGRESSION, DECISION_TREE, RANDOM_FOREST]
 
 DEFAULT_SPARK_MEMORY_SIZE = "1g"
 
+
 class MachineLearningRunner(object):
     def __init__(self, algorithm, memory_size=DEFAULT_SPARK_MEMORY_SIZE):
         self.spark = SparkSession.builder.appName('Delay Classifier').config("spark.driver.memory", memory_size).master('local[*]').getOrCreate()
         self.dl = DataLoader(self.spark)
         self.dp = DataProcessor(self.spark)
         self.dt = DataTrainer(self.spark, self.dp)
-        self.dpr = DataPredictor(self.spark)
         self.algorithm = algorithm
 
     def load_data(self, filepath):
@@ -38,19 +36,10 @@ class MachineLearningRunner(object):
             return self.dt.decision_tree(processed_data)
         return self.dt.random_forest(processed_data)
 
-    def predict(self, processed_data, saved_model):
-        if self.algorithm == LINEAR_REGRESSION:
-            self.dpr.predict_lr(processed_data, saved_model)
-        elif self.algorithm == DECISION_TREE:
-            print("DECISON...")
-            self.dpr.predict_dt(processed_data, saved_model)
-        self.dpr.predict_rf(processed_data, saved_model)
-
     def run(self, data_filepath):
         input_dataset = self.load_data(data_filepath)
         processed_data = self.process_data(input_dataset)
         saved_model = self.train_data(processed_data)
-        self.predict(processed_data, saved_model)
         print("Finished!")
 
 
@@ -90,7 +79,7 @@ class Launcher(object):
         if not memory_size.isnumeric():
             return False, "memory size should be a number"
 
-        if memory_size < 1:
+        if int(memory_size) < 1:
             return False, "Recommended memory size is over 1 GB"
 
         return True, None
