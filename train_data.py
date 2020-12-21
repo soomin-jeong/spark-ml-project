@@ -7,10 +7,13 @@ from pyspark.ml.evaluation import RegressionEvaluator
 from pyspark.ml import Pipeline
 from pyspark.ml.tuning import CrossValidator, ParamGridBuilder, CrossValidatorModel
 
-MAX_DEPTH_OPTIONS = [3, 10, 15]
+MAX_DEPTH_OPTIONS = [3, 5, 6]
 MAX_BINS_OPTIONS = [10, 15]
 REG_PARAM_OPTIONS = [0, 0.5]
 ELASTICNET_PARAM_OPTIONS = [0, 0.5, 1]
+RF_NUM_TREES = [4]
+RF_MAX_DEPTH = [6]
+
 
 TARGET_VARIABLE = 'ArrDelay'
 
@@ -89,6 +92,7 @@ class DataTrainer(object):
         train_data, test_data = self.get_training_and_test_data(data)
 
         # learning on training data
+        print("TEST: LINEAR REGRESSION")
         self.learn_from_training_data(train_data, regressor, model_path, param_grid)
 
         # evavluate on test data
@@ -109,6 +113,7 @@ class DataTrainer(object):
         train_data, test_data = self.get_training_and_test_data(data)
 
         # learning on training data
+        print("TEST: DECISION TREE")
         self.learn_from_training_data(train_data, regressor, model_path, param_grid)
 
         # evavluate on test data
@@ -122,13 +127,14 @@ class DataTrainer(object):
         regressor = RandomForestRegressor(featuresCol='features', labelCol=TARGET_VARIABLE)
         model_path = "random_forest"
 
-        param_grid = ParamGridBuilder().addGrid(regressor.maxDepth, MAX_DEPTH_OPTIONS) \
-            .addGrid(regressor.maxBins, MAX_BINS_OPTIONS) \
+        param_grid = ParamGridBuilder().addGrid(regressor.numTrees, RF_NUM_TREES) \
+            .addGrid(regressor.maxDepth, RF_MAX_DEPTH) \
             .build()
 
         train_data, test_data = self.get_training_and_test_data(data)
 
         # learning on training data
+        print("TEST: RANDOM FOREST")
         self.learn_from_training_data(train_data, regressor, model_path, param_grid)
 
         # evavluate on test data

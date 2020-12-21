@@ -1,0 +1,447 @@
+DECISION TREE RESULTS: (USING DATASET_REDUCED.CSV): 
+PARAMETERS TAKEN: 
+MAX_DEPTH_OPTIONS = [3, 10, 15]
+MAX_BINS_OPTIONS = [10, 15]).
+
+
+Enter the filepath of a CSV dataset (by default, input_dataset/dataset.csv): Enter the machine learning algorithm (1: Linear Regression, 2:Decision Tree, 3:Random Forest, by default Linear Regression): Setting default log level to "WARN".
+To adjust logging level use sc.setLogLevel(newLevel). For SparkR, use setLogLevel(newLevel).
+[LOAD] Loading the dataset...
+                                                                                [PROCESS] Finished processing the raw dataset
+TEST: DECISION TREE
+[TRAINING] Starting model Fitting
+                                                                                Time taken to develop model: 1351.7310674190521s.
+                                                                                RMSE training: 8.053289173028
+maxDepth 3 maxBins 10  achieved a performance of  18.975711306173032 RMSE
+maxDepth 3 maxBins 15  achieved a performance of  17.130032156947358 RMSE
+maxDepth 10 maxBins 10  achieved a performance of  15.333551352142056 RMSE
+maxDepth 10 maxBins 15  achieved a performance of  13.402737767154916 RMSE
+maxDepth 15 maxBins 10  achieved a performance of  14.499399874938032 RMSE
+maxDepth 15 maxBins 15  achieved a performance of  11.91575908780764 RMSE
+Performance Best Model
+RMSE training: 11.91575908780764
+                                                                                RMSE test: 11.476481587643514
+Finished!
+
+Process finished with exit code 0
+
+
+LINEAR REGRESSION RESULTS: (USING DATASET_REDUCED.CSV): 
+PARAMETERS TAKEN: 
+REG_PARAM_OPTIONS=[0,0.5]
+ELASTICNET_PARAM_OPTIONS=[0,0.5,1]
+
+
+Enter the filepath of a CSV dataset (by default, input_dataset/dataset.csv): C:\Users\apina\OneDrive\Escritorio\MASTER\UPM\BD\Spark project\WorkspacePyspark\input_dataset\dataset_reduced.csv
+Enter the machine learning algorithm (1: Linear Regression, 2:Decision Tree, 3:Random Forest, by default Linear Regression):
+Setting default log level to "WARN".
+To adjust logging level use sc.setLogLevel(newLevel). For SparkR, use setLogLevel(newLevel).
+[LOAD] Loading the dataset...
+[PROCESS] Finished processing the raw dataset
+[TRAINING] Starting model Fitting
+Time taken to develop model: 216.85626435279846s.
+RMSE training: 0.0014888147711557933
+regParam 0.0 elasticNetParam 0.0  achieved a performance of  0.0019093211179712641 RMSE
+regParam 0.0 elasticNetParam 0.5  achieved a performance of  0.0019093211179712641 RMSE
+regParam 0.0 elasticNetParam 1.0  achieved a performance of  0.0019093211179712641 RMSE
+regParam 0.5 elasticNetParam 0.0  achieved a performance of  1.3471734735655316 RMSE
+regParam 0.5 elasticNetParam 0.5  achieved a performance of  0.7224181169568286 RMSE
+regParam 0.5 elasticNetParam 1.0  achieved a performance of  0.500005231314854 RMSE
+Performance Best Model
+RMSE training: 0.0019093211179712641
+RMSE test: 0.0014945278015904104
+Finished!
+
+
+
+RANDOM FOREST RESULTS: (USING DATASET_REDUCED.CSV): 
+PARAMETER TAKEN: 
+RF_NUM_TREES=[4]
+RF_MAX_DEPTH=[6]
+
+
+Enter the filepath of a CSV dataset (by default, input_dataset/dataset.csv): C:\Users\apina\OneDrive\Escritorio\MASTER\UPM\BD\Spark project\WorkspacePyspark\input_dataset\dataset_reduced.csv
+Enter the machine learning algorithm (1: Linear Regression, 2:Decision Tree, 3:Random Forest, by default Linear Regression): 3
+Setting default log level to "WARN".
+To adjust logging level use sc.setLogLevel(newLevel). For SparkR, use setLogLevel(newLevel).
+[LOAD] Loading the dataset...
+[PROCESS] Finished processing the raw dataset
+TEST: RANDOM FOREST
+[TRAINING] Starting model Fitting
+Time taken to develop model: 183.25865817070007s.
+RMSE training: 12.815052568360958
+numTrees 4 maxDepth 6  achieved a performance of  12.516616880724786 RMSE
+Performance Best Model
+RMSE training: 12.516616880724786
+RMSE test: 14.037741350728414
+Finished!
+
+Process finished with exit code 0
+
+
+My computer was crashing because it was been run in 32 trees!!!!!!!! (by default)
+
+
+FROM CMD: 
+
+LINEAR REGRESSION RESULTS: (USING DATASET.CSV):
+PARAMETERS TAKEN: 
+REG_PARAM_OPTIONS=[0,0.5]
+ELASTICNET_PARAM_OPTIONS=[0,0.5,1]
+
+
+Enter the filepath of a CSV dataset (by default, input_dataset/dataset.csv): C:\Users\apina\OneDrive\Escritorio\MASTER\UPM\BD\Spark project\WorkspacePyspark\input_dataset\dataset.csv
+Enter the machine learning algorithm (1: Linear Regression, 2:Decision Tree, 3:Random Forest, by default Linear Regression):
+Setting default log level to "WARN".
+To adjust logging level use sc.setLogLevel(newLevel). For SparkR, use setLogLevel(newLevel).
+[LOAD] Loading the dataset...
+[PROCESS] Finished processing the raw dataset
+TEST: LINEAR REGRESSION
+[TRAINING] Starting model Fitting
+Time taken to develop model: 1402.6074137687683s.
+RMSE training: 0.0
+regParam 0.0 elasticNetParam 0.0  achieved a performance of  1.798396093953194e-14 RMSE
+regParam 0.0 elasticNetParam 0.5  achieved a performance of  1.798396093953194e-14 RMSE
+regParam 0.0 elasticNetParam 1.0  achieved a performance of  1.798396093953194e-14 RMSE
+regParam 0.5 elasticNetParam 0.0  achieved a performance of  1.3947875697597572 RMSE
+regParam 0.5 elasticNetParam 0.5  achieved a performance of  0.7550410402045338 RMSE
+regParam 0.5 elasticNetParam 1.0  achieved a performance of  0.5000009217625496 RMSE
+Performance Best Model
+RMSE training: 1.798396093953194e-14
+RMSE test: 0.0
+Finished!
+
+C:\Users\apina\OneDrive\Escritorio\MASTER\UPM\BD\Spark project\WorkspacePyspark\v20-12-2020-5\spark-ml-project-main>CORRECTO: el proceso con PID 16024 (proceso secundario de PID 13960)
+ha sido terminado.
+CORRECTO: el proceso con PID 13960 (proceso secundario de PID 18536)
+ha sido terminado.
+CORRECTO: el proceso con PID 18536 (proceso secundario de PID 24616)
+ha sido terminado.
+
+
+
+DECISION TREE:  (USING DATASET.CSV):  
+PARAMETERS TAKEN:
+MAX_DEPTH_OPTIONS = [3, 10, 15]
+MAX_BINS_OPTIONS = [10, 15]).
+
+Enter the filepath of a CSV dataset (by default, input_dataset/dataset.csv): C:\Users\apina\OneDrive\Escritorio\MASTER\UPM\BD\Spark project\WorkspacePyspark\input_dataset\dataset.csv
+Enter the machine learning algorithm (1: Linear Regression, 2:Decision Tree, 3:Random Forest, by default Linear Regression): 2
+Setting default log level to "WARN".
+To adjust logging level use sc.setLogLevel(newLevel). For SparkR, use setLogLevel(newLevel).
+[LOAD] Loading the dataset...
+[PROCESS] Finished processing the raw dataset
+TEST: DECISION TREE
+[TRAINING] Starting model Fitting
+20/12/20 23:45:08 ERROR Executor: Exception in task 4.0 in stage 266.0 (TID 28416)
+java.lang.OutOfMemoryError: Java heap space
+        at org.apache.spark.ml.tree.impl.DTStatsAggregator.<init>(DTStatsAggregator.scala:77)
+        at org.apache.spark.ml.tree.impl.RandomForest$.$anonfun$findBestSplits$22(RandomForest.scala:651)
+        at org.apache.spark.ml.tree.impl.RandomForest$.$anonfun$findBestSplits$22$adapted(RandomForest.scala:647)
+        at org.apache.spark.ml.tree.impl.RandomForest$$$Lambda$5251/32990150.apply(Unknown Source)
+        at scala.Array$.tabulate(Array.scala:334)
+        at org.apache.spark.ml.tree.impl.RandomForest$.$anonfun$findBestSplits$21(RandomForest.scala:647)
+        at org.apache.spark.ml.tree.impl.RandomForest$$$Lambda$5229/8015551.apply(Unknown Source)
+        at org.apache.spark.rdd.RDD.$anonfun$mapPartitions$2(RDD.scala:837)
+        at org.apache.spark.rdd.RDD.$anonfun$mapPartitions$2$adapted(RDD.scala:837)
+        at org.apache.spark.rdd.RDD$$Lambda$4751/11539714.apply(Unknown Source)
+        at org.apache.spark.rdd.MapPartitionsRDD.compute(MapPartitionsRDD.scala:52)
+        at org.apache.spark.rdd.RDD.computeOrReadCheckpoint(RDD.scala:349)
+        at org.apache.spark.rdd.RDD.iterator(RDD.scala:313)
+        at org.apache.spark.shuffle.ShuffleWriteProcessor.write(ShuffleWriteProcessor.scala:59)
+        at org.apache.spark.scheduler.ShuffleMapTask.runTask(ShuffleMapTask.scala:99)
+        at org.apache.spark.scheduler.ShuffleMapTask.runTask(ShuffleMapTask.scala:52)
+        at org.apache.spark.scheduler.Task.run(Task.scala:127)
+        at org.apache.spark.executor.Executor$TaskRunner.$anonfun$run$3(Executor.scala:446)
+        at org.apache.spark.executor.Executor$TaskRunner$$Lambda$1986/31575573.apply(Unknown Source)
+        at org.apache.spark.util.Utils$.tryWithSafeFinally(Utils.scala:1377)
+        at org.apache.spark.executor.Executor$TaskRunner.run(Executor.scala:449)
+        at java.util.concurrent.ThreadPoolExecutor.runWorker(Unknown Source)
+        at java.util.concurrent.ThreadPoolExecutor$Worker.run(Unknown Source)
+        at java.lang.Thread.run(Unknown Source)
+20/12/20 23:45:09 ERROR SparkUncaughtExceptionHandler: Uncaught exception in thread Thread[Executor task launch worker for task 28416,5,main]
+java.lang.OutOfMemoryError: Java heap space
+        at org.apache.spark.ml.tree.impl.DTStatsAggregator.<init>(DTStatsAggregator.scala:77)
+        at org.apache.spark.ml.tree.impl.RandomForest$.$anonfun$findBestSplits$22(RandomForest.scala:651)
+        at org.apache.spark.ml.tree.impl.RandomForest$.$anonfun$findBestSplits$22$adapted(RandomForest.scala:647)
+        at org.apache.spark.ml.tree.impl.RandomForest$$$Lambda$5251/32990150.apply(Unknown Source)
+        at scala.Array$.tabulate(Array.scala:334)
+        at org.apache.spark.ml.tree.impl.RandomForest$.$anonfun$findBestSplits$21(RandomForest.scala:647)
+        at org.apache.spark.ml.tree.impl.RandomForest$$$Lambda$5229/8015551.apply(Unknown Source)
+        at org.apache.spark.rdd.RDD.$anonfun$mapPartitions$2(RDD.scala:837)
+        at org.apache.spark.rdd.RDD.$anonfun$mapPartitions$2$adapted(RDD.scala:837)
+        at org.apache.spark.rdd.RDD$$Lambda$4751/11539714.apply(Unknown Source)
+        at org.apache.spark.rdd.MapPartitionsRDD.compute(MapPartitionsRDD.scala:52)
+        at org.apache.spark.rdd.RDD.computeOrReadCheckpoint(RDD.scala:349)
+        at org.apache.spark.rdd.RDD.iterator(RDD.scala:313)
+        at org.apache.spark.shuffle.ShuffleWriteProcessor.write(ShuffleWriteProcessor.scala:59)
+        at org.apache.spark.scheduler.ShuffleMapTask.runTask(ShuffleMapTask.scala:99)
+        at org.apache.spark.scheduler.ShuffleMapTask.runTask(ShuffleMapTask.scala:52)
+        at org.apache.spark.scheduler.Task.run(Task.scala:127)
+        at org.apache.spark.executor.Executor$TaskRunner.$anonfun$run$3(Executor.scala:446)
+        at org.apache.spark.executor.Executor$TaskRunner$$Lambda$1986/31575573.apply(Unknown Source)
+        at org.apache.spark.util.Utils$.tryWithSafeFinally(Utils.scala:1377)
+        at org.apache.spark.executor.Executor$TaskRunner.run(Executor.scala:449)
+        at java.util.concurrent.ThreadPoolExecutor.runWorker(Unknown Source)
+        at java.util.concurrent.ThreadPoolExecutor$Worker.run(Unknown Source)
+        at java.lang.Thread.run(Unknown Source)
+20/12/20 23:45:09 ERROR Inbox: Ignoring error
+java.util.concurrent.RejectedExecutionException: Task org.apache.spark.executor.Executor$TaskRunner@1d3f353 rejected from java.util.concurrent.ThreadPoolExecutor@664ae5[Shutting down, pool size = 12, active threads = 12, queued tasks = 0, completed tasks = 28412]
+        at java.util.concurrent.ThreadPoolExecutor$AbortPolicy.rejectedExecution(Unknown Source)
+        at java.util.concurrent.ThreadPoolExecutor.reject(Unknown Source)
+        at java.util.concurrent.ThreadPoolExecutor.execute(Unknown Source)
+        at org.apache.spark.executor.Executor.launchTask(Executor.scala:230)
+        at org.apache.spark.scheduler.local.LocalEndpoint.$anonfun$reviveOffers$1(LocalSchedulerBackend.scala:93)
+        at org.apache.spark.scheduler.local.LocalEndpoint.$anonfun$reviveOffers$1$adapted(LocalSchedulerBackend.scala:91)
+        at scala.collection.Iterator.foreach(Iterator.scala:941)
+        at scala.collection.Iterator.foreach$(Iterator.scala:941)
+        at scala.collection.AbstractIterator.foreach(Iterator.scala:1429)
+        at scala.collection.IterableLike.foreach(IterableLike.scala:74)
+        at scala.collection.IterableLike.foreach$(IterableLike.scala:73)
+        at scala.collection.AbstractIterable.foreach(Iterable.scala:56)
+        at org.apache.spark.scheduler.local.LocalEndpoint.reviveOffers(LocalSchedulerBackend.scala:91)
+        at org.apache.spark.scheduler.local.LocalEndpoint$$anonfun$receive$1.applyOrElse(LocalSchedulerBackend.scala:74)
+        at org.apache.spark.rpc.netty.Inbox.$anonfun$process$1(Inbox.scala:115)
+        at org.apache.spark.rpc.netty.Inbox.safelyCall(Inbox.scala:203)
+        at org.apache.spark.rpc.netty.Inbox.process(Inbox.scala:100)
+        at org.apache.spark.rpc.netty.MessageLoop.org$apache$spark$rpc$netty$MessageLoop$$receiveLoop(MessageLoop.scala:75)
+        at org.apache.spark.rpc.netty.MessageLoop$$anon$1.run(MessageLoop.scala:41)
+        at java.util.concurrent.ThreadPoolExecutor.runWorker(Unknown Source)
+        at java.util.concurrent.ThreadPoolExecutor$Worker.run(Unknown Source)
+        at java.lang.Thread.run(Unknown Source)
+20/12/20 23:45:09 ERROR Instrumentation: org.apache.spark.SparkException: Job 93 cancelled because SparkContext was shut down
+        at org.apache.spark.scheduler.DAGScheduler.$anonfun$cleanUpAfterSchedulerStop$1(DAGScheduler.scala:979)
+        at org.apache.spark.scheduler.DAGScheduler.$anonfun$cleanUpAfterSchedulerStop$1$adapted(DAGScheduler.scala:977)
+        at scala.collection.mutable.HashSet.foreach(HashSet.scala:79)
+        at org.apache.spark.scheduler.DAGScheduler.cleanUpAfterSchedulerStop(DAGScheduler.scala:977)
+        at org.apache.spark.scheduler.DAGSchedulerEventProcessLoop.onStop(DAGScheduler.scala:2257)
+        at org.apache.spark.util.EventLoop.stop(EventLoop.scala:84)
+        at org.apache.spark.scheduler.DAGScheduler.stop(DAGScheduler.scala:2170)
+        at org.apache.spark.SparkContext.$anonfun$stop$12(SparkContext.scala:1973)
+        at org.apache.spark.util.Utils$.tryLogNonFatalError(Utils.scala:1357)
+        at org.apache.spark.SparkContext.stop(SparkContext.scala:1973)
+        at org.apache.spark.SparkContext.$anonfun$new$35(SparkContext.scala:631)
+        at org.apache.spark.util.SparkShutdownHook.run(ShutdownHookManager.scala:214)
+        at org.apache.spark.util.SparkShutdownHookManager.$anonfun$runAll$2(ShutdownHookManager.scala:188)
+        at scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.java:23)
+        at org.apache.spark.util.Utils$.logUncaughtExceptions(Utils.scala:1932)
+        at org.apache.spark.util.SparkShutdownHookManager.$anonfun$runAll$1(ShutdownHookManager.scala:188)
+        at scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.java:23)
+        at scala.util.Try$.apply(Try.scala:213)
+        at org.apache.spark.util.SparkShutdownHookManager.runAll(ShutdownHookManager.scala:188)
+        at org.apache.spark.util.SparkShutdownHookManager$$anon$2.run(ShutdownHookManager.scala:178)
+        at org.apache.hadoop.util.ShutdownHookManager$1.run(ShutdownHookManager.java:54)
+        at org.apache.spark.scheduler.DAGScheduler.runJob(DAGScheduler.scala:775)
+        at org.apache.spark.SparkContext.runJob(SparkContext.scala:2099)
+        at org.apache.spark.SparkContext.runJob(SparkContext.scala:2120)
+        at org.apache.spark.SparkContext.runJob(SparkContext.scala:2139)
+        at org.apache.spark.SparkContext.runJob(SparkContext.scala:2164)
+        at org.apache.spark.rdd.RDD.$anonfun$collect$1(RDD.scala:1004)
+        at org.apache.spark.rdd.RDDOperationScope$.withScope(RDDOperationScope.scala:151)
+        at org.apache.spark.rdd.RDDOperationScope$.withScope(RDDOperationScope.scala:112)
+        at org.apache.spark.rdd.RDD.withScope(RDD.scala:388)
+        at org.apache.spark.rdd.RDD.collect(RDD.scala:1003)
+        at org.apache.spark.rdd.PairRDDFunctions.$anonfun$collectAsMap$1(PairRDDFunctions.scala:737)
+        at org.apache.spark.rdd.RDDOperationScope$.withScope(RDDOperationScope.scala:151)
+        at org.apache.spark.rdd.RDDOperationScope$.withScope(RDDOperationScope.scala:112)
+        at org.apache.spark.rdd.RDD.withScope(RDD.scala:388)
+        at org.apache.spark.rdd.PairRDDFunctions.collectAsMap(PairRDDFunctions.scala:736)
+        at org.apache.spark.ml.tree.impl.RandomForest$.findBestSplits(RandomForest.scala:663)
+        at org.apache.spark.ml.tree.impl.RandomForest$.runBagged(RandomForest.scala:208)
+        at org.apache.spark.ml.tree.impl.RandomForest$.run(RandomForest.scala:302)
+        at org.apache.spark.ml.regression.DecisionTreeRegressor.$anonfun$train$1(DecisionTreeRegressor.scala:126)
+        at org.apache.spark.ml.util.Instrumentation$.$anonfun$instrumented$1(Instrumentation.scala:191)
+        at scala.util.Try$.apply(Try.scala:213)
+        at org.apache.spark.ml.util.Instrumentation$.instrumented(Instrumentation.scala:191)
+        at org.apache.spark.ml.regression.DecisionTreeRegressor.train(DecisionTreeRegressor.scala:114)
+        at org.apache.spark.ml.regression.DecisionTreeRegressor.train(DecisionTreeRegressor.scala:44)
+        at org.apache.spark.ml.Predictor.fit(Predictor.scala:150)
+        at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+        at sun.reflect.NativeMethodAccessorImpl.invoke(Unknown Source)
+        at sun.reflect.DelegatingMethodAccessorImpl.invoke(Unknown Source)
+        at java.lang.reflect.Method.invoke(Unknown Source)
+        at py4j.reflection.MethodInvoker.invoke(MethodInvoker.java:244)
+        at py4j.reflection.ReflectionEngine.invoke(ReflectionEngine.java:357)
+        at py4j.Gateway.invoke(Gateway.java:282)
+        at py4j.commands.AbstractCommand.invokeMethod(AbstractCommand.java:132)
+        at py4j.commands.CallCommand.execute(CallCommand.java:79)
+        at py4j.GatewayConnection.run(GatewayConnection.java:238)
+        at java.lang.Thread.run(Unknown Source)
+
+20/12/20 23:45:09 ERROR TaskSetManager: Task 4 in stage 266.0 failed 1 times; aborting job
+Traceback (most recent call last):                               (0 + 13) / 200]
+  File "main.py", line 113, in <module>
+    ml_runner.run(data_filepath)
+  File "main.py", line 40, in run
+    saved_model = self.train_data(processed_data)
+  File "main.py", line 34, in train_data
+    return self.dt.decision_tree(processed_data)
+  File "C:\Users\apina\OneDrive\Escritorio\MASTER\UPM\BD\Spark project\WorkspacePyspark\v20-12-2020-5\spark-ml-project-main\train_data.py", line 117, in decision_tree
+    self.learn_from_training_data(train_data, regressor, model_path, param_grid)
+  File "C:\Users\apina\OneDrive\Escritorio\MASTER\UPM\BD\Spark project\WorkspacePyspark\v20-12-2020-5\spark-ml-project-main\train_data.py", line 56, in learn_from_training_data
+    cv_model = cv.fit(train_data)
+  File "C:\Users\apina\AppData\Local\Programs\Python\Python38-32\lib\site-packages\pyspark\ml\base.py", line 129, in fit
+    return self._fit(dataset)
+  File "C:\Users\apina\AppData\Local\Programs\Python\Python38-32\lib\site-packages\pyspark\ml\tuning.py", line 358, in _fit
+    for j, metric, subModel in pool.imap_unordered(lambda f: f(), tasks):
+  File "C:\Users\apina\AppData\Local\Programs\Python\Python38-32\lib\multiprocessing\pool.py", line 868, in next
+    raise value
+  File "C:\Users\apina\AppData\Local\Programs\Python\Python38-32\lib\multiprocessing\pool.py", line 125, in worker
+    result = (True, func(*args, **kwds))
+  File "C:\Users\apina\AppData\Local\Programs\Python\Python38-32\lib\site-packages\pyspark\ml\tuning.py", line 358, in <lambda>
+    for j, metric, subModel in pool.imap_unordered(lambda f: f(), tasks):
+  File "C:\Users\apina\AppData\Local\Programs\Python\Python38-32\lib\site-packages\pyspark\ml\tuning.py", line 52, in singleTask
+    index, model = next(modelIter)
+  File "C:\Users\apina\AppData\Local\Programs\Python\Python38-32\lib\site-packages\pyspark\ml\base.py", line 62, in __next__
+    return index, self.fitSingleModel(index)
+  File "C:\Users\apina\AppData\Local\Programs\Python\Python38-32\lib\site-packages\pyspark\ml\base.py", line 103, in fitSingleModel
+    return estimator.fit(dataset, paramMaps[index])
+  File "C:\Users\apina\AppData\Local\Programs\Python\Python38-32\lib\site-packages\pyspark\ml\base.py", line 127, in fit
+    return self.copy(params)._fit(dataset)
+  File "C:\Users\apina\AppData\Local\Programs\Python\Python38-32\lib\site-packages\pyspark\ml\pipeline.py", line 109, in _fit
+    model = stage.fit(dataset)
+  File "C:\Users\apina\AppData\Local\Programs\Python\Python38-32\lib\site-packages\pyspark\ml\base.py", line 129, in fit
+    return self._fit(dataset)
+  File "C:\Users\apina\AppData\Local\Programs\Python\Python38-32\lib\site-packages\pyspark\ml\wrapper.py", line 321, in _fit
+    java_model = self._fit_java(dataset)
+  File "C:\Users\apina\AppData\Local\Programs\Python\Python38-32\lib\site-packages\pyspark\ml\wrapper.py", line 318, in _fit_java
+    return self._java_obj.fit(dataset._jdf)
+  File "C:\Users\apina\AppData\Local\Programs\Python\Python38-32\lib\site-packages\py4j\java_gateway.py", line 1304, in __call__
+    return_value = get_return_value(
+  File "C:\Users\apina\AppData\Local\Programs\Python\Python38-32\lib\site-packages\pyspark\sql\utils.py", line 128, in deco
+    return f(*a, **kw)
+  File "C:\Users\apina\AppData\Local\Programs\Python\Python38-32\lib\site-packages\py4j\protocol.py", line 326, in get_return_value
+    raise Py4JJavaError(
+py4j.protocol.Py4JJavaError: An error occurred while calling o3380.fit.
+: org.apache.spark.SparkException: Job 93 cancelled because SparkContext was shut down
+        at org.apache.spark.scheduler.DAGScheduler.$anonfun$cleanUpAfterSchedulerStop$1(DAGScheduler.scala:979)
+        at org.apache.spark.scheduler.DAGScheduler.$anonfun$cleanUpAfterSchedulerStop$1$adapted(DAGScheduler.scala:977)
+        at scala.collection.mutable.HashSet.foreach(HashSet.scala:79)
+        at org.apache.spark.scheduler.DAGScheduler.cleanUpAfterSchedulerStop(DAGScheduler.scala:977)
+        at org.apache.spark.scheduler.DAGSchedulerEventProcessLoop.onStop(DAGScheduler.scala:2257)
+        at org.apache.spark.util.EventLoop.stop(EventLoop.scala:84)
+        at org.apache.spark.scheduler.DAGScheduler.stop(DAGScheduler.scala:2170)
+        at org.apache.spark.SparkContext.$anonfun$stop$12(SparkContext.scala:1973)
+        at org.apache.spark.util.Utils$.tryLogNonFatalError(Utils.scala:1357)
+        at org.apache.spark.SparkContext.stop(SparkContext.scala:1973)
+        at org.apache.spark.SparkContext.$anonfun$new$35(SparkContext.scala:631)
+        at org.apache.spark.util.SparkShutdownHook.run(ShutdownHookManager.scala:214)
+        at org.apache.spark.util.SparkShutdownHookManager.$anonfun$runAll$2(ShutdownHookManager.scala:188)
+        at scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.java:23)
+        at org.apache.spark.util.Utils$.logUncaughtExceptions(Utils.scala:1932)
+        at org.apache.spark.util.SparkShutdownHookManager.$anonfun$runAll$1(ShutdownHookManager.scala:188)
+        at scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.java:23)
+        at scala.util.Try$.apply(Try.scala:213)
+        at org.apache.spark.util.SparkShutdownHookManager.runAll(ShutdownHookManager.scala:188)
+        at org.apache.spark.util.SparkShutdownHookManager$$anon$2.run(ShutdownHookManager.scala:178)
+        at org.apache.hadoop.util.ShutdownHookManager$1.run(ShutdownHookManager.java:54)
+        at org.apache.spark.scheduler.DAGScheduler.runJob(DAGScheduler.scala:775)
+        at org.apache.spark.SparkContext.runJob(SparkContext.scala:2099)
+        at org.apache.spark.SparkContext.runJob(SparkContext.scala:2120)
+        at org.apache.spark.SparkContext.runJob(SparkContext.scala:2139)
+        at org.apache.spark.SparkContext.runJob(SparkContext.scala:2164)
+        at org.apache.spark.rdd.RDD.$anonfun$collect$1(RDD.scala:1004)
+        at org.apache.spark.rdd.RDDOperationScope$.withScope(RDDOperationScope.scala:151)
+        at org.apache.spark.rdd.RDDOperationScope$.withScope(RDDOperationScope.scala:112)
+        at org.apache.spark.rdd.RDD.withScope(RDD.scala:388)
+        at org.apache.spark.rdd.RDD.collect(RDD.scala:1003)
+        at org.apache.spark.rdd.PairRDDFunctions.$anonfun$collectAsMap$1(PairRDDFunctions.scala:737)
+        at org.apache.spark.rdd.RDDOperationScope$.withScope(RDDOperationScope.scala:151)
+        at org.apache.spark.rdd.RDDOperationScope$.withScope(RDDOperationScope.scala:112)
+        at org.apache.spark.rdd.RDD.withScope(RDD.scala:388)
+        at org.apache.spark.rdd.PairRDDFunctions.collectAsMap(PairRDDFunctions.scala:736)
+        at org.apache.spark.ml.tree.impl.RandomForest$.findBestSplits(RandomForest.scala:663)
+        at org.apache.spark.ml.tree.impl.RandomForest$.runBagged(RandomForest.scala:208)
+        at org.apache.spark.ml.tree.impl.RandomForest$.run(RandomForest.scala:302)
+        at org.apache.spark.ml.regression.DecisionTreeRegressor.$anonfun$train$1(DecisionTreeRegressor.scala:126)
+        at org.apache.spark.ml.util.Instrumentation$.$anonfun$instrumented$1(Instrumentation.scala:191)
+        at scala.util.Try$.apply(Try.scala:213)
+        at org.apache.spark.ml.util.Instrumentation$.instrumented(Instrumentation.scala:191)
+        at org.apache.spark.ml.regression.DecisionTreeRegressor.train(DecisionTreeRegressor.scala:114)
+        at org.apache.spark.ml.regression.DecisionTreeRegressor.train(DecisionTreeRegressor.scala:44)
+        at org.apache.spark.ml.Predictor.fit(Predictor.scala:150)
+        at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+        at sun.reflect.NativeMethodAccessorImpl.invoke(Unknown Source)
+        at sun.reflect.DelegatingMethodAccessorImpl.invoke(Unknown Source)
+        at java.lang.reflect.Method.invoke(Unknown Source)
+        at py4j.reflection.MethodInvoker.invoke(MethodInvoker.java:244)
+        at py4j.reflection.ReflectionEngine.invoke(ReflectionEngine.java:357)
+        at py4j.Gateway.invoke(Gateway.java:282)
+        at py4j.commands.AbstractCommand.invokeMethod(AbstractCommand.java:132)
+        at py4j.commands.CallCommand.execute(CallCommand.java:79)
+        at py4j.GatewayConnection.run(GatewayConnection.java:238)
+        at java.lang.Thread.run(Unknown Source)
+
+
+C:\Users\apina\OneDrive\Escritorio\MASTER\UPM\BD\Spark project\WorkspacePyspark\v20-12-2020-5\spark-ml-project-main>CORRECTO: el proceso con PID 8400 (proceso secundario de PID 21944)
+ha sido terminado.
+CORRECTO: el proceso con PID 21944 (proceso secundario de PID 17248)
+ha sido terminado.
+CORRECTO: el proceso con PID 17248 (proceso secundario de PID 22536)
+ha sido terminado.
+
+
+
+
+RANDOM FOREST:  (DATASET.CSV): 
+PARAMETERS TAKEN: 
+RF_NUM_TREES=[4]
+RF_MAX_DEPTH=[6]
+
+
+Enter the filepath of a CSV dataset (by default, input_dataset/dataset.csv): C:\Users\apina\OneDrive\Escritorio\MASTER\UPM\BD\Spark project\WorkspacePyspark\input_dataset\dataset.csv
+Enter the machine learning algorithm (1: Linear Regression, 2:Decision Tree, 3:Random Forest, by default Linear Regression): 3
+Setting default log level to "WARN".
+To adjust logging level use sc.setLogLevel(newLevel). For SparkR, use setLogLevel(newLevel).
+[LOAD] Loading the dataset...
+[PROCESS] Finished processing the raw dataset
+TEST: RANDOM FOREST
+[TRAINING] Starting model Fitting
+Time taken to develop model: 997.5930805206299s.
+RMSE training: 13.3570192394932
+numTrees 4 maxDepth 6  achieved a performance of  12.980625727439257 RMSE
+Performance Best Model
+RMSE training: 12.980625727439257
+RMSE test: 13.49748917631839
+Finished!
+
+C:\Users\apina\OneDrive\Escritorio\MASTER\UPM\BD\Spark project\WorkspacePyspark\v20-12-2020-5\spark-ml-project-main>CORRECTO: el proceso con PID 22768 (proceso secundario de PID 11232)
+ha sido terminado.
+CORRECTO: el proceso con PID 11232 (proceso secundario de PID 11536)
+ha sido terminado.
+CORRECTO: el proceso con PID 11536 (proceso secundario de PID 25468)
+ha sido terminado.
+
+DECISION TREE: (DATASET.CSV): 
+Parameters: 
+MAX_DEPTH_OPTIONS=[3,5,6]
+MAX_BINS_OPTIONS=[10,15]
+
+
+Enter the filepath of a CSV dataset (by default, input_dataset/dataset.csv): C:\Users\apina\OneDrive\Escritorio\MASTER\UPM\BD\Spark project\WorkspacePyspark\input_dataset\dataset.csv
+Enter the machine learning algorithm (1: Linear Regression, 2:Decision Tree, 3:Random Forest, by default Linear Regression): 2
+Setting default log level to "WARN".
+To adjust logging level use sc.setLogLevel(newLevel). For SparkR, use setLogLevel(newLevel).
+[LOAD] Loading the dataset...
+[PROCESS] Finished processing the raw dataset
+TEST: DECISION TREE
+[TRAINING] Starting model Fitting
+Time taken to develop model: 1755.681142091751s.
+RMSE training: 15.958498911813804
+maxDepth 3 maxBins 10  achieved a performance of  21.08720282778462 RMSE
+maxDepth 3 maxBins 15  achieved a performance of  18.906636235740947 RMSE
+maxDepth 5 maxBins 10  achieved a performance of  20.042406253232553 RMSE
+maxDepth 5 maxBins 15  achieved a performance of  17.635308405746507 RMSE
+maxDepth 6 maxBins 10  achieved a performance of  18.80676600307378 RMSE
+maxDepth 6 maxBins 15  achieved a performance of  15.843644554516512 RMSE
+Performance Best Model
+RMSE training: 15.843644554516512
+RMSE test: 16.15985355283281
+Finished!
+
+C:\Users\apina\OneDrive\Escritorio\MASTER\UPM\BD\Spark project\WorkspacePyspark\v20-12-2020-5\spark-ml-project-main>CORRECTO: el proceso con PID 10980 (proceso secundario de PID 7180)
+ha sido terminado.
+CORRECTO: el proceso con PID 7180 (proceso secundario de PID 9620)
+ha sido terminado.
+CORRECTO: el proceso con PID 9620 (proceso secundario de PID 18788)
+ha sido terminado.
