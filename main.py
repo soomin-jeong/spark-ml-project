@@ -1,9 +1,8 @@
-import os
+import os, sys
 from pyspark.sql import SparkSession
 
-from load_data import DataLoader
-from process_data import DataProcessor
-from train_data import DataTrainer
+from utilities.process_data import DataProcessor
+from utilities.train_data import DataTrainer
 
 
 LINEAR_REGRESSION = 1
@@ -14,36 +13,40 @@ ALGORITHM_OPTIONS = [LINEAR_REGRESSION, DECISION_TREE, RANDOM_FOREST]
 
 
 class MachineLearningRunner(object):
-    def __init__(self, algorithm):
-        self.spark = SparkSession.builder.appName('Delay Classifier').master('local[*]').getOrCreate()
-        self.dl = DataLoader(self.spark)
+    def __init__(self, algorithm, spark):
+        self.spark = spark
         self.dp = DataProcessor(self.spark)
         self.dt = DataTrainer(self.spark, self.dp)
         self.algorithm = algorithm
 
     def load_data(self, filepath):
-        return self.dl.load_dataset(filepath)
+        print("[LOAD] Loading the dataset...")
+        self.dataset = self.spark.read.csv(filepath, header=True)
+        print("[LOAD] Successful")
+        return self.dataset
 
     def process_data(self, input_dataset):
-        return self.dp.run_all_data_processing(input_dataset)
+        print("[PROCESSING] Start executing...")
+        self.dataset = self.dp.run_all_data_processing(input_dataset)
+        print("[PROCESSING] Done processing the data")
+        return self.dataset
 
     def train_data(self, processed_data):
+        print(self.algorithm)
         if self.algorithm == LINEAR_REGRESSION:
             return self.dt.linear_regression(processed_data)
-        elif self.algorithm == DECISION_TREE:
-            return self.dt.decision_tree(processed_data)
-        return self.dt.random_forest(processed_data)
+        else:
+            return self.dt.tree_builder(processed_data, self.algorithm)
 
     def run(self, data_filepath):
         input_dataset = self.load_data(data_filepath)
         processed_data = self.process_data(input_dataset)
         saved_model = self.train_data(processed_data)
-        print("Finished!")
+        print("[APPLICATION] Finished!")
 
 
 class Launcher(object):
     def check_filepath(self, filepath):
-        # TODO: Are there any exceptions to take care of?
 
         # CASE 1: File does not exist
         try:
@@ -54,62 +57,60 @@ class Launcher(object):
             f.close()
 
         # CASE 2: Not in format of csv
-        if not filepath.lower().endswith('csv'):
+        if not filepath.lower().endswith('csv') and not filepath.lower().endswith('csv.bz2'):
             print(filepath.lower())
-            return False, "Not in CSV"
+            return False, "[ERROR] Not in CSV or CSV.BZ2 format"
 
         # CASE 3 : empty file
         if os.stat(filepath).st_size == 0:
-            return False, "Empty File"
+            return False, "[ERROR] Empty File"
         return True, None
 
     def check_algorithm(self, algorithm):
-        # TODO: Are there any exceptions to take care of?
-
-        if not algorithm.isnumeric():
-            return False, "algorithm choice should be a number"
-
+        try:
+            int(algorithm)
+        except:
+            print("[ERROR] Algorithm is not an integer")
+            sys.exit(1)
         if int(algorithm) not in ALGORITHM_OPTIONS:
-            return False, "algorithm should be {}, {} or {}".format(*ALGORITHM_OPTIONS)
+            return False, "[ERROR] algorithm should be {}, {} or {}".format(*ALGORITHM_OPTIONS)
         return True, None
 
 
-launcher = Launcher()
-
-
 if __name__ == '__main__':
-    with open("spark-ml-ascii", "r") as f:
+
+    # Use the input variables given by user
+    arguments = sys.argv
+    print(arguments)
+    path = "/".join(arguments[0].split("/")[:-1])
+    with open(os.path.join(path + "/spark-ml-ascii"), "r") as f:
         print(f.read())
 
-    # default values
-    correct_syntax = False
-    data_filepath = os.path.join(os.getcwd(), 'input_dataset', 'dataset.csv')
-    algorithm = LINEAR_REGRESSION
+    launcher = Launcher()
 
-    while not correct_syntax:
-        # filepath for raw dataset
-        data_filepath_input = input("Enter the filepath of a CSV dataset (by default, input_dataset/dataset.csv): ")
+    
+    data_filepath = os.path.join(path, 'input_dataset', arguments[1])
+    print(data_filepath)
+    algorithm = arguments[2]
 
-        if data_filepath_input:
-            right_file_path, f_error_msg = launcher.check_filepath(data_filepath_input)
-            if not right_file_path:
-                print(f_error_msg + ", Enter again...")
-                continue
-            data_filepath = data_filepath_input
+    # Check the input variables given by user
+    bool_file, error_msg = launcher.check_filepath(data_filepath)
+    if not bool_file:
+        print(error_msg)
+        sys.exit(1)
+    
+    bool_algo, error_msg = launcher.check_algorithm(algorithm)
+    if not bool_algo:
+        print(error_msg)
+        sys.exit(1)
 
-        # algorithm for machine learning
-        algorithm_input = input("Enter the machine learning algorithm (1: Linear Regression, 2:Decision Tree, 3:Random Forest, "
-                          "by default Linear Regression): ")
+    algorithm = int(algorithm)
 
-        if algorithm_input:
-            algorithm_check, a_error_msg = launcher.check_algorithm(algorithm_input)
-            if not algorithm_check:
-                print(a_error_msg + ", Enter again...")
-                continue
-            algorithm = int(algorithm_input)
-        correct_syntax = True
-
-    ml_runner = MachineLearningRunner(algorithm)
+    # Run the spark application
+    spark = SparkSession.builder.appName('Delay Classifier').master('local[*]').getOrCreate()
+    ml_runner = MachineLearningRunner(algorithm, spark)
     ml_runner.run(data_filepath)
+    spark.stop()
+
 
 
